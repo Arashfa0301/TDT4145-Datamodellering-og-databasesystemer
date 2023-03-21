@@ -173,15 +173,13 @@ def createDatabase():
     ON DELETE CASCADE
     )"""
     )
-
     cursor.execute(
         """CREATE TABLE Customer(
-    CustomerNumber INTEGER NOT NULL,
+    CustomerNumber INTEGER PRIMARY KEY AUTOINCREMENT,
     Name TEXT NOT NULL,
     Email TEXT UNIQUE,
     Address TEXT NOT NULL,
-    TelephoneNumber INTEGER UNIQUE,
-    CONSTRAINT Customer_PK PRIMARY KEY (CustomerNumber)
+    TelephoneNumber INTEGER UNIQUE
     )"""
     )
 

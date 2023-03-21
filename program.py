@@ -46,8 +46,8 @@ def register():
 
     # this goes to shit when the private key is id. total shit
     cursor.execute(
-        "INSERT INTO Customer VALUES (?, ?, ?, ?)",
-        [0, name, email, address, tellephone_number],
+        "INSERT INTO Customer(Name, Email, Address, TelephoneNumber) VALUES (?, ?, ?, ?)",
+        [name, email, address, tellephone_number],
     )
 
     print("Fantastic!! You are now registered as a user.")
@@ -90,7 +90,7 @@ def main():
     print("- 2 -> Login")
     response = input("what to do... :")
 
-    # register() if (response == "1") else login()
+    register() if (response == "1") else login()
 
     while True:
         print(

@@ -97,5 +97,9 @@ def fillDatabase():
     cursor.execute("INSERT INTO TrainRouteRunsWeekdays VALUES (2,3)")
     cursor.execute("INSERT INTO TrainRouteRunsWeekdays VALUES (2,4)")
 
+    cursor.execute(
+        'INSERT INTO Customer(Name, Email, Address, TelephoneNumber) VALUES ("asdf","asdf","asdf","asdf")'
+    )
+
     con.commit()
     con.close()
