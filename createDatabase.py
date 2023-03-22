@@ -232,7 +232,7 @@ def createDatabase():
     TrainRouteID INTEGER NOT NULL,
     WagonID INTEGER NOT NULL,
     Sequence INTEGER,
-    CONSTRAINT WagonLayout_PK PRIMARY KEY (TrainRouteID, WagonID),
+    CONSTRAINT WagonLayout_PK PRIMARY KEY (TrainRouteID, Sequence),
     CONSTRAINT WagonLayout_FK1 FOREIGN KEY (TrainRouteID) REFERENCES TrainRoute(TrainRouteID)
     ON UPDATE CASCADE
     ON DELETE CASCADE,
