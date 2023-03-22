@@ -200,7 +200,6 @@ def createDatabase():
     InstanceID INTEGER NOT NULL,
     TrainRouteID INTEGER NOT NULL,
     Time INTEGER,
-    CustomerNumber INTEGER NOT NULL,
     CONSTRAINT TrainRouteInstance_PK PRIMARY KEY (InstanceID, TrainRouteID),
     CONSTRAINT TrainRouteInstance_FK FOREIGN KEY (TrainRouteID) REFERENCES TrainRoute(TrainRouteID)
     ON UPDATE CASCADE
