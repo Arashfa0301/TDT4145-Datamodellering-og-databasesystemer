@@ -85,5 +85,12 @@ def fillDatabase():
     cursor.execute("INSERT INTO TrainRouteRunsWeekdays VALUES (2,3)")
     cursor.execute("INSERT INTO TrainRouteRunsWeekdays VALUES (2,4)")
 
+    cursor.execute("INSERT INTO TrainRouteInstance VALUES (0, 0, date('2023-04-03'))")
+    cursor.execute("INSERT INTO TrainRouteInstance VALUES (1, 0, date('2023-04-04'))")
+    cursor.execute("INSERT INTO TrainRouteInstance VALUES (2, 1, date('2023-04-03'))")
+    cursor.execute("INSERT INTO TrainRouteInstance VALUES (3, 1, date('2023-04-04'))")
+    cursor.execute("INSERT INTO TrainRouteInstance VALUES (4, 2, date('2023-04-03'))")
+    cursor.execute("INSERT INTO TrainRouteInstance VALUES (5, 2, date('2023-04-04'))")
+
     con.commit()
     con.close()
