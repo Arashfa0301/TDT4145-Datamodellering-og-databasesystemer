@@ -19,8 +19,6 @@ def trainRoutesByDayAndTrainStation(trainStation, day):
     selTrainS = executeCursorSelect(stationQuery[0],stationQuery[1])
     weekDay = executeCursorSelect(dayQuery[0],dayQuery[1])
 
-    routeID = "SELECT r1.TrainRouteID  "
-
     query = ["""SELECT r.TrainRouteID, i.ArrivalTime as Arrival, i.DepartureTime as Departure
     FROM TrainRoute r 
     INNER JOIN TrainRouteRunsWeekDays w ON w.TrainRouteID = r.TrainRouteID
