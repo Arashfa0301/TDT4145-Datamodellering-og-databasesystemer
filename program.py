@@ -76,7 +76,7 @@ def register():
         "INSERT INTO Customer(Name, Email, Address, TelephoneNumber) VALUES (?, ?, ?, ?)",
         [name, email, address, tellephone_number],
     )
-
+    con.commit()
     print("Fantastic!! You are now registered as a user.")
     print("You now will be transfer to the login interface. ")
 
