@@ -46,9 +46,9 @@ def fillDatabase():
     cursor.execute('INSERT INTO WeekDay VALUES (5,"Saturday")')
     cursor.execute('INSERT INTO WeekDay VALUES (6,"Sunday")')
 
-    cursor.execute("INSERT INTO TrainRoute VALUES (0,0,0)")
-    cursor.execute("INSERT INTO TrainRoute VALUES (1,0,0)")
-    cursor.execute("INSERT INTO TrainRoute VALUES (2,0,0)")
+    cursor.execute("INSERT INTO TrainRoute VALUES (0,0,0,0)")
+    cursor.execute("INSERT INTO TrainRoute VALUES (1,0,0,0)")
+    cursor.execute("INSERT INTO TrainRoute VALUES (2,0,0,1)")
 
     cursor.execute("INSERT INTO IntermediateStationOnTrainRoute VALUES (0,0,time('17:34:00'),time('17:34:00'))")
     cursor.execute("INSERT INTO IntermediateStationOnTrainRoute VALUES (0,1,time('16:49:00'),time('16:49:00'))")
