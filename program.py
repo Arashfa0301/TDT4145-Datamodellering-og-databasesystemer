@@ -42,7 +42,32 @@ def trainRoutesByDayAndTrainStation(trainStation, day):
 
 
 def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day, time):
-    print("asdf")
+    startStationID = executeCursorSelect("SELECT StationsID FROM Trainstation WHERE name = ?", [startStation])[0][0]
+    endStationID = executeCursorSelect("SELECT StationsID FROM Trainstation WHERE name = ?", [endStation])[0][0]
+
+    result = executeCursorSelect("""
+    WITH test AS (SELECT TrainRouteID,  StationsID, StationOrder, mainDireciton FROM IntermediateStationOnTrainRoute 
+        INNER JOIN TrainRoute USING (TrainRouteID) 
+        INNER JOIN IntermediateStationOnTrackStretch USING (TrackID, StationsID)  
+        WHERE StationsID = ? OR StationsID = ?)
+    SELECT TrainRouteID, Time FROM TrainRouteInstance INNER JOIN
+        (SELECT a.TrainRouteID, a.mainDireciton, minStation, minStationOrder, maxStation,maxStationOrder
+        FROM (SELECT TrainRouteID, StationsID as minStation, min(StationOrder) as minStationOrder, mainDireciton FROM test GROUP BY TrainRouteID) as a
+        INNER JOIN (SELECT TrainRouteID, StationsID as maxStation, max(StationOrder) as maxStationOrder FROM test GROUP BY TrainRouteID) AS b USING (TrainRouteID))
+        USING (TrainRouteID)
+        WHERE ((mainDireciton == 1 AND minStation = ? AND maxStation == ?) OR (mainDireciton == 0 AND maxStation = ? AND minStation == ?))
+        AND (Time = date(?) or Time = date(?, "+1 day"))
+	""", [startStationID, endStationID, startStationID, endStationID, startStationID, endStationID, day, day]
+    )
+
+    stationTimeTable = PrettyTable()
+
+    stationTimeTable.field_names = ["TrainRoute","Date"]
+    for i in result:
+        stationTimeTable.add_row([i[0],i[1]])
+
+    print(stationTimeTable)
+    print("\n")
 
 
 def register():
@@ -95,9 +120,9 @@ def login():
         print("Please try again. ")
         email = input("Epost: ")
         user = executeCursorSelect(
-            "SELECT Email FROM Customer WHERE Email = ?",
-            [email],
-        )
+        "SELECT Name, Email, Address, TelephoneNumber FROM Customer WHERE Email = ?",
+        [email],
+    )
 
     print("Wonderful!!! You are now logged in ")
 

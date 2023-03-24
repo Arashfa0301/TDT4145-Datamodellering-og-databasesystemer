@@ -114,6 +114,7 @@ def createDatabase():
     TrainRouteID INTEGER NOT NULL,
     TrackID INTEGER NOT NULL,
     OperatorID INTEGER NOT NULL,
+    mainDireciton INTEGER NOT NULL,
     CONSTRAINT TrainRoute_PK PRIMARY KEY (TrainRouteID),
     CONSTRAINT TrainRoute_FK3 FOREIGN KEY (TrackID) REFERENCES TrackStretch(TrackID)
     ON UPDATE CASCADE
