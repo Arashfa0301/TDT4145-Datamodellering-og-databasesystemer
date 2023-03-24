@@ -10,7 +10,7 @@ def fillDatabase():
     cursor.execute('INSERT INTO Trainstation VALUES (2,"Mo i Rana",3.5)')
     cursor.execute('INSERT INTO Trainstation VALUES (3,"Mosjøen",6.8)')
     cursor.execute('INSERT INTO Trainstation VALUES (4,"Steinkjer",3.6)')
-    cursor.execute('INSERT INTO Trainstation VALUES (5,"Trondheim",5.1)')
+    cursor.execute('INSERT INTO Trainstation VALUES (5,"Trondheim S",5.1)')
 
     cursor.execute('INSERT INTO TrackStretch VALUES (0,"Nordlandsbanen","Diesel")')
 
@@ -100,6 +100,8 @@ def fillDatabase():
     cursor.execute("INSERT INTO TrainRouteInstance VALUES (3, 1, date('2023-04-04'))")
     cursor.execute("INSERT INTO TrainRouteInstance VALUES (4, 2, date('2023-04-03'))")
     cursor.execute("INSERT INTO TrainRouteInstance VALUES (5, 2, date('2023-04-04'))")
+
+    cursor.execute('INSERT INTO Customer VALUES(0, "Viljan", "viljan@gmail.com", "Lyngveien 15", 96622317)')
 
     con.commit()
     con.close()
