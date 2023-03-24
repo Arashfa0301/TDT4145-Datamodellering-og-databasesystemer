@@ -163,8 +163,8 @@ def main():
             case "2":
                 startStation = input("Start station: ")
                 endStation = input("End station: ")
-                day = input("While day do you wish to travel: ")
-                time = input("At white time do you wish to travel: ")
+                day = input("Which day do you wish to travel: ")
+                time = input("At what time do you wish to travel: ")
                 trainRoutesByStartAndEndStationsAndDayAndTime(
                     startStation, endStation, day, time
                 )
