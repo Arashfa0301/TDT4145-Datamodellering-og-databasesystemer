@@ -1,6 +1,6 @@
 import sqlite3
 from prettytable import PrettyTable
-
+from buyTickets import buyTickets
 
 con = sqlite3.connect("trainstationDB.db")
 cursor = con.cursor()
@@ -70,20 +70,8 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
     print("\n")
 
 def buyAvailableTicketsOnGivenTrainRoute():
-    print("Where do you want to travel?")
-    startStation = input("From: ")
-    endStation = input("To: ")
-    day = input("Day: ")
-    time = input("Time")
-    availableRoutes = []
-
-    triQuery = ["SELECT * FROM TrainRouteInstance",[]]
-    result = executeCursorSelect(triQuery[0],triQuery[1])
-
-    query = """INSERT INTO Ticket (OrderNumber, InstanceID) VALUES (2,0)"""
-    #actual_shit = executeCursorSelect("SELECT * FROM Ticket",[])
-    for i in result:
-        print(i)
+    # Run the search function first and pass into here:
+    buyTickets()
 
 
 def register():
@@ -169,7 +157,7 @@ def main():
             " - Type 2 to list all the available trainRoutes that pass though given start and end stations at a given day and time\n "
         )
         print(
-            " - Type 3 to buy tickets on a given route"
+            " - Type 3 to buy tickets on a given route\n"
         )
         response = input("Type in your answer: ")
 
