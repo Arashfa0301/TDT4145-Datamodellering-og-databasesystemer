@@ -19,26 +19,47 @@ def trainRoutesByDayAndTrainStation(trainStation, day):
     selTrainS = executeCursorSelect(stationQuery[0],stationQuery[1])
     weekDay = executeCursorSelect(dayQuery[0],dayQuery[1])
 
-    query = ["""SELECT r.TrainRouteID, t1.Name, t2.Name, i.ArrivalTime as Arrival, i.DepartureTime as Departure
+    query = ["""SELECT r.TrainRouteID, i.ArrivalTime as Arrival, i.DepartureTime as Departure
     FROM TrainRoute r 
     INNER JOIN TrainRouteRunsWeekDays w ON w.TrainRouteID = r.TrainRouteID
-    INNER JOIN Trainstation t1 ON r.StartStation = t1.StationsID
-    INNER JOIN Trainstation t2 ON r.EndStation = t2.StationsID
     INNER JOIN IntermediateStationOnTrainRoute i ON r.TrainRouteID = i.TrainRouteID
     WHERE i.StationsID = ? AND w.WeekDayID = ?
     """,[selTrainS[0][0], weekDay[0][0]]]
     
     result = executeCursorSelect(query[0], query[1])
+
+    stations = []
+    for i in result:
+        queryStart = ["""SELECT i1.StationsID FROM IntermediateStationOnTrainRoute i1 INNER JOIN TrainRoute r ON r.TrainRouteID = i1.TrainRouteID 
+	        WHERE r.TrainRouteID = ?
+	        ORDER BY 
+		        CASE WHEN r.MainDirection = 0 THEN StationsID ELSE '' END DESC,
+		        CASE WHEN r.MainDirection = 1 THEN StationsID ELSE '' END ASC LIMIT 1""",[i[0]]]
+        startStation = executeCursorSelect(queryStart[0], queryStart[1])
+        queryEnd = ["""SELECT i1.StationsID FROM IntermediateStationOnTrainRoute i1 INNER JOIN TrainRoute r ON r.TrainRouteID = i1.TrainRouteID 
+	        WHERE r.TrainRouteID = ?
+	        ORDER BY 
+		        CASE WHEN r.MainDirection = 0 THEN StationsID ELSE '' END ASC,
+		        CASE WHEN r.MainDirection = 1 THEN StationsID ELSE '' END DESC LIMIT 1""",[i[0]]]
+        endStation = executeCursorSelect(queryEnd[0], queryEnd[1])
+        stations.append([startStation[0][0],endStation[0][0]])
+
+    stationsPrint = []
+    for pair in stations:
+            start = executeCursorSelect("SELECT ts.Name FROM Trainstation ts WHERE ts.StationsID = ?",[pair[0]])
+            end = executeCursorSelect("SELECT ts.Name FROM Trainstation ts WHERE ts.StationsID = ?",[pair[1]])
+            stationsPrint.append([start[0][0],end[0][0]])  
+
     stationTimeTable = PrettyTable()
 
-    stationTimeTable.field_names = ["ID","From","To","Arrival","Departure"]
+    stationTimeTable.field_names =["TrainRouteID","From", "To", "Arrival","Departure"]
+    print("\n")
     print("=====================")
-    for i in result:
-        stationTimeTable.add_row([i[0],i[1],i[2],i[3],i[4]])
+    for i in range(len(result)):
+        stationTimeTable.add_row([result[i][0],stationsPrint[i][0], stationsPrint[i][1], result[i][1],result[i][2]])
 
     print(stationTimeTable)
     print("=====================")
-    print("\n")
 
 
 def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day, time):
@@ -46,16 +67,16 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
     endStationID = executeCursorSelect("SELECT StationsID FROM Trainstation WHERE name = ?", [endStation])[0][0]
 
     result = executeCursorSelect("""
-    WITH test AS (SELECT TrainRouteID,  StationsID, StationOrder, mainDireciton FROM IntermediateStationOnTrainRoute 
+    WITH test AS (SELECT TrainRouteID,  StationsID, StationOrder, MainDirection FROM IntermediateStationOnTrainRoute 
         INNER JOIN TrainRoute USING (TrainRouteID) 
         INNER JOIN IntermediateStationOnTrackStretch USING (TrackID, StationsID)  
         WHERE StationsID = ? OR StationsID = ?)
     SELECT TrainRouteID, Time FROM TrainRouteInstance INNER JOIN
-        (SELECT a.TrainRouteID, a.mainDireciton, minStation, minStationOrder, maxStation,maxStationOrder
-        FROM (SELECT TrainRouteID, StationsID as minStation, min(StationOrder) as minStationOrder, mainDireciton FROM test GROUP BY TrainRouteID) as a
+        (SELECT a.TrainRouteID, a.MainDirection, minStation, minStationOrder, maxStation,maxStationOrder
+        FROM (SELECT TrainRouteID, StationsID as minStation, min(StationOrder) as minStationOrder, MainDirection FROM test GROUP BY TrainRouteID) as a
         INNER JOIN (SELECT TrainRouteID, StationsID as maxStation, max(StationOrder) as maxStationOrder FROM test GROUP BY TrainRouteID) AS b USING (TrainRouteID))
         USING (TrainRouteID)
-        WHERE ((mainDireciton == 1 AND minStation = ? AND maxStation == ?) OR (mainDireciton == 0 AND maxStation = ? AND minStation == ?))
+        WHERE ((MainDirection == 1 AND minStation = ? AND maxStation == ?) OR (MainDirection == 0 AND maxStation = ? AND minStation == ?))
         AND (Time = date(?) or Time = date(?, "+1 day"))
 	""", [startStationID, endStationID, startStationID, endStationID, startStationID, endStationID, day, day]
     )
@@ -172,8 +193,8 @@ def main():
             case "2":
                 startStation = input("Start station: ")
                 endStation = input("End station: ")
-                day = input("While day do you wish to travel: ")
-                time = input("At white time do you wish to travel: ")
+                day = input("Which day do you wish to travel: ")
+                time = input("At what time do you wish to travel: ")
                 trainRoutesByStartAndEndStationsAndDayAndTime(
                     startStation, endStation, day, time
                 )
