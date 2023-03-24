@@ -71,7 +71,9 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
 
 def buyAvailableTicketsOnGivenTrainRoute():
     # Run the search function first and pass into here:
-    buyTickets()
+    # 0 Should be the id
+    trainRouteInstance = 0
+    buyTickets(trainRouteInstance)
 
 
 def register():

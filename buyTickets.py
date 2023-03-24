@@ -10,13 +10,18 @@ def executeCursorSelect(sql, parameters):
     cursor.execute(sql, parameters)
     return cursor.fetchall()
 
-def buyTickets():
+def buyTickets(TrainRouteInstance):
+    
     print("Where do you want to travel?")
     startStation = input("From: ")
     endStation = input("To: ")
     day = input("Day: ")
     time = input("Time")
     availableRoutes = []
+
+    getAvailableSeatsQuery = """
+    Add shit here from SQL
+    """
 
     triQuery = ["SELECT * FROM TrainRouteInstance",[]]
     result = executeCursorSelect(triQuery[0],triQuery[1])
