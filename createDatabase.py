@@ -21,15 +21,7 @@ def createDatabase():
     TrackID INTEGER NOT NULL,
     Name TEXT NOT NULL,
     PropulsionEnergy TEXT,
-    StartStation INTEGER NOT NULL,
-    EndStation INTEGER NOT NULL,
-    CONSTRAINT TrackStretch_PK PRIMARY KEY (TrackID),
-    CONSTRAINT TrackStretch_FK FOREIGN KEY (StartStation) REFERENCES Trainstation(StationsID)
-    ON UPDATE CASCADE
-    ON DELETE CASCADE,
-    CONSTRAINT TrackStretch_FK FOREIGN KEY (EndStation) REFERENCES Trainstation(StationsID)
-    ON UPDATE CASCADE
-    ON DELETE CASCADE
+    CONSTRAINT TrackStretch_PK PRIMARY KEY (TrackID)
     )"""
     )
 
@@ -37,6 +29,7 @@ def createDatabase():
         """CREATE TABLE IntermediateStationOnTrackStretch(
     TrackID INTEGER NOT NULL,
     StationsID INTEGER NOT NULL,
+    StationOrder INTEGER NOT NULL,
     CONSTRAINT IntermediateStationOnTrackStretch_PK PRIMARY KEY (TrackID, StationsID),
     CONSTRAINT IntermediateStationOnTrackStretch_FK1 FOREIGN KEY (TrackID) REFERENCES TrackStretch(TrackID)
     ON UPDATE CASCADE
@@ -119,19 +112,10 @@ def createDatabase():
     cursor.execute(
         """CREATE TABLE TrainRoute(
     TrainRouteID INTEGER NOT NULL,
-    StartStation INTEGER NOT NULL,
-    EndStation INTEGER NOT NULL,
-    DepartureTime INTEGER,
-    Arrival time INTEGER,
     TrackID INTEGER NOT NULL,
     OperatorID INTEGER NOT NULL,
+    mainDireciton INTEGER NOT NULL,
     CONSTRAINT TrainRoute_PK PRIMARY KEY (TrainRouteID),
-    CONSTRAINT TrainRoute_FK1 FOREIGN KEY (StartStation) REFERENCES Trainstation(StartStation)
-    ON UPDATE CASCADE
-    ON DELETE CASCADE,
-    CONSTRAINT TrainRoute_FK2 FOREIGN KEY (EndStation) REFERENCES Trainstation(EndStation)
-    ON UPDATE CASCADE
-    ON DELETE CASCADE,
     CONSTRAINT TrainRoute_FK3 FOREIGN KEY (TrackID) REFERENCES TrackStretch(TrackID)
     ON UPDATE CASCADE
     ON DELETE CASCADE,
