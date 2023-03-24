@@ -11,18 +11,21 @@ def executeCursorSelect(sql, parameters):
     return cursor.fetchall()
 
 def buyTickets(TrainRouteInstance):
-    
-    print("Where do you want to travel?")
-    startStation = input("From: ")
-    endStation = input("To: ")
-    day = input("Day: ")
-    time = input("Time")
-    availableRoutes = []
+    testRoute = 0
 
+
+    # Vogner på en rute
     getAvailableSeatsQuery = """
-    Add shit here from SQL
+    SELECT wl.WagonID FROM TrainRoute tr INNER JOIN WagonLayout wl ON tr.TrainRouteID = wl.TrainRouteID WHERE tr.TrainRouteID = 1 ORDER BY wl.Sequence
     """
-
+    getShit = """
+    SELECT wl.WagonID, st.NumberOfRows, st.RowWidth, sl.NumberOfCompartments FROM TrainRoute tr 
+    INNER JOIN WagonLayout wl ON tr.TrainRouteID = wl.TrainRouteID 
+        LEFT JOIN SittingWagon st ON wl.WagonID = st.WagonID
+        left join SleepingWagon sl on wl.WagonID = sl.WagonID
+        WHERE tr.TrainRouteID = 0 ORDER BY wl.Sequence  
+    """
+    ## Men får med null verdier, kan bruke case for å hindre det.
     triQuery = ["SELECT * FROM TrainRouteInstance",[]]
     result = executeCursorSelect(triQuery[0],triQuery[1])
 
