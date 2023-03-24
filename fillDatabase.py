@@ -20,12 +20,12 @@ def fillDatabase():
     cursor.execute("INSERT INTO PartialTrackStretch VALUES (3,0,280,1,3,4)")
     cursor.execute("INSERT INTO PartialTrackStretch VALUES (4,0,120,2,4,5)")
 
-    cursor.execute("INSERT INTO IntermediateStationOnTrackStretch VALUES (0,0,10)")
-    cursor.execute("INSERT INTO IntermediateStationOnTrackStretch VALUES (0,1,11)")
-    cursor.execute("INSERT INTO IntermediateStationOnTrackStretch VALUES (0,2,12)")
-    cursor.execute("INSERT INTO IntermediateStationOnTrackStretch VALUES (0,3,13)")
-    cursor.execute("INSERT INTO IntermediateStationOnTrackStretch VALUES (0,4,14)")
-    cursor.execute("INSERT INTO IntermediateStationOnTrackStretch VALUES (0,5,15)")
+    cursor.execute("INSERT INTO IntermediateStationOnTrackStretch VALUES (0,0,0)")
+    cursor.execute("INSERT INTO IntermediateStationOnTrackStretch VALUES (0,1,1)")
+    cursor.execute("INSERT INTO IntermediateStationOnTrackStretch VALUES (0,2,2)")
+    cursor.execute("INSERT INTO IntermediateStationOnTrackStretch VALUES (0,3,3)")
+    cursor.execute("INSERT INTO IntermediateStationOnTrackStretch VALUES (0,4,4)")
+    cursor.execute("INSERT INTO IntermediateStationOnTrackStretch VALUES (0,5,5)")
 
     cursor.execute('INSERT INTO Wagon VALUES (0,"SJ-sittevogn-1")')
     cursor.execute('INSERT INTO Wagon VALUES (1,"SJ-sovevogn-1")')
