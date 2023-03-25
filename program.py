@@ -45,26 +45,50 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
     startStationID = executeCursorSelect("SELECT StationsID FROM Trainstation WHERE name = ?", [startStation])[0][0]
     endStationID = executeCursorSelect("SELECT StationsID FROM Trainstation WHERE name = ?", [endStation])[0][0]
 
+    if time == "":
+        time = "00:00:00"
+
     result = executeCursorSelect("""
-    WITH test AS (SELECT TrainRouteID,  StationsID, StationOrder, mainDireciton FROM IntermediateStationOnTrainRoute 
+    WITH StationsWithOrder AS 
+        (SELECT TrainRouteID,  StationsID, StationOrder, MainDirection, ArrivalTime, DepartureTime 
+        FROM IntermediateStationOnTrainRoute 
         INNER JOIN TrainRoute USING (TrainRouteID) 
-        INNER JOIN IntermediateStationOnTrackStretch USING (TrackID, StationsID)  
-        WHERE StationsID = ? OR StationsID = ?)
-    SELECT TrainRouteID, Time FROM TrainRouteInstance INNER JOIN
-        (SELECT a.TrainRouteID, a.mainDireciton, minStation, minStationOrder, maxStation,maxStationOrder
-        FROM (SELECT TrainRouteID, StationsID as minStation, min(StationOrder) as minStationOrder, mainDireciton FROM test GROUP BY TrainRouteID) as a
-        INNER JOIN (SELECT TrainRouteID, StationsID as maxStation, max(StationOrder) as maxStationOrder FROM test GROUP BY TrainRouteID) AS b USING (TrainRouteID))
-        USING (TrainRouteID)
-        WHERE ((mainDireciton == 1 AND minStation = ? AND maxStation == ?) OR (mainDireciton == 0 AND maxStation = ? AND minStation == ?))
-        AND (Time = date(?) or Time = date(?, "+1 day"))
-	""", [startStationID, endStationID, startStationID, endStationID, startStationID, endStationID, day, day]
+        INNER JOIN IntermediateStationOnTrackStretch USING (TrackID, StationsID) 
+        WHERE StationsID = ?1 OR StationsID = ?2)
+    SELECT TrainRouteID, Time as Date, DepartureStation, DepartureTime, ArrivalStation, ArrivalTime 
+    FROM TrainRouteInstance
+    INNER JOIN
+        (SELECT TrainRouteID, MainDirection, minStation, minStationOrder, maxStation,maxStationOrder,
+        CASE WHEN MainDirection = 1 THEN mi.DepartureTime ELSE ma.DepartureTime END AS DepartureTime, 
+        CASE WHEN MainDirection = 1 THEN ma.ArrivalTime ELSE mi.ArrivalTime END AS ArrivalTime,
+        CASE WHEN MainDirection = 1 THEN mi.StationName ELSE ma.StationName END AS DepartureStation,
+        CASE WHEN MainDirection = 1 THEN ma.StationName ELSE mi.StationName END AS ArrivalStation
+        FROM 
+            (SELECT TrainRouteID, StationsID AS minStation, min(StationOrder) AS minStationOrder, MainDirection, DepartureTime, ArrivalTime, Name as StationName 
+            FROM StationsWithOrder 
+            INNER JOIN Trainstation USING (StationsID) 
+            GROUP BY TrainRouteID) 
+        AS mi
+        INNER JOIN 
+            (SELECT TrainRouteID, StationsID AS maxStation, max(StationOrder) AS maxStationOrder, DepartureTime, ArrivalTime, Name as StationName 
+            FROM StationsWithOrder 
+            INNER JOIN Trainstation USING (StationsID) 
+            GROUP BY TrainRouteID) 
+        AS ma 
+        USING (TrainRouteID))
+    USING (TrainRouteID)
+    WHERE ((MainDirection == 1 AND minStation = ?1 AND maxStation == ?2) 
+    OR (MainDirection == 0 AND maxStation = ?1 AND minStation == ?2))
+    AND (Time = date(?3) or Time = date(?3, "+1 day")) 
+    AND DepartureTime >= time(?4)
+	""", [startStationID, endStationID, day, time]
     )
 
     stationTimeTable = PrettyTable()
 
-    stationTimeTable.field_names = ["TrainRoute","Date"]
+    stationTimeTable.field_names = ["TrainRoute","Date", "Departure Station", "Departure Time", "Arrival Station", "Arrival Time"]
     for i in result:
-        stationTimeTable.add_row([i[0],i[1]])
+        stationTimeTable.add_row([i[0],i[1],i[2],i[3],i[4],i[5]])
 
     print(stationTimeTable)
     print("\n")
@@ -140,8 +164,10 @@ def main():
     print("Please register a user og login if you allready have a user")
     print("- 1 -> Register")
     print("- 2 -> Login")
+    print("\n")
 
     response = input("what to do... :")
+    print("\n")
 
     register() if (response == "1") else login()
 
@@ -153,6 +179,7 @@ def main():
             " - Type 2 to list all the available trainRoutes that pass though given start and end stations at a given day and time\n "
         )
         response = input("Type in your answer: ")
+        print("\n")
 
         match response:
             case "1":
