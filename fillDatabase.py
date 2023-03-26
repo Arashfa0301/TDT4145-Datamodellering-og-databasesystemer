@@ -28,10 +28,16 @@ def fillDatabase():
     cursor.execute("INSERT INTO IntermediateStationOnTrackStretch VALUES (0,5,5)")
 
     cursor.execute('INSERT INTO Wagon VALUES (0,"SJ-sittevogn-1")')
-    cursor.execute('INSERT INTO Wagon VALUES (1,"SJ-sovevogn-1")')
+    cursor.execute('INSERT INTO Wagon VALUES (1,"SJ-sittevogn-1")')
+    cursor.execute('INSERT INTO Wagon VALUES (2,"SJ-sovevogn-1")')
+    cursor.execute('INSERT INTO Wagon VALUES (3,"SJ-sittevogn-1")')
+    cursor.execute('INSERT INTO Wagon VALUES (4,"SJ-sittevogn-1")')
 
     cursor.execute("INSERT INTO SittingWagon VALUES (0,3,4)")
-    cursor.execute("INSERT INTO SleepingWagon VALUES (1,4)")
+    cursor.execute("INSERT INTO SittingWagon VALUES (1,3,4)")
+    cursor.execute("INSERT INTO SleepingWagon VALUES (2,4)")
+    cursor.execute("INSERT INTO SittingWagon VALUES (3,3,4)")
+    cursor.execute("INSERT INTO SittingWagon VALUES (4,3,4)")
 
     cursor.execute('INSERT INTO Operator VALUES (0,"SJ")')
 
@@ -102,10 +108,10 @@ def fillDatabase():
     )
 
     cursor.execute("INSERT INTO WagonLayout VALUES (0,0,1)")
-    cursor.execute("INSERT INTO WagonLayout VALUES (0,0,2)")
-    cursor.execute("INSERT INTO WagonLayout VALUES (1,1,1)")
-    cursor.execute("INSERT INTO WagonLayout VALUES (1,0,2)")
-    cursor.execute("INSERT INTO WagonLayout VALUES (2,0,1)")
+    cursor.execute("INSERT INTO WagonLayout VALUES (0,1,2)")
+    cursor.execute("INSERT INTO WagonLayout VALUES (1,2,1)")
+    cursor.execute("INSERT INTO WagonLayout VALUES (1,3,2)")
+    cursor.execute("INSERT INTO WagonLayout VALUES (2,4,1)")
 
     cursor.execute("INSERT INTO TrainRouteRunsWeekdays VALUES (0,0)")
     cursor.execute("INSERT INTO TrainRouteRunsWeekdays VALUES (0,1)")
