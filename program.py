@@ -1,5 +1,7 @@
 import sqlite3
+
 from prettytable import PrettyTable
+from datetime import date
 from buyTickets import buyTickets
 
 con = sqlite3.connect("trainstationDB.db")
@@ -13,79 +15,151 @@ def executeCursorSelect(sql, parameters):
 
 
 def trainRoutesByDayAndTrainStation(trainStation, day):
-    dayQuery = ["SELECT WeekDayID FROM WeekDay WHERE Name=?",[day]]
-    stationQuery = ["SELECT StationsID FROM Trainstation WHERE Name=?", [trainStation]]
+    print("")
+    try: 
+        stationID = executeCursorSelect(
+            "SELECT StationsID FROM Trainstation WHERE Name=?", [trainStation]
+        )[0][0]
+    except:
+        print("Not a valid trainstation.")
+        return
 
-    selTrainS = executeCursorSelect(stationQuery[0],stationQuery[1])
-    weekDay = executeCursorSelect(dayQuery[0],dayQuery[1])
+    try:
+        weekDayID = executeCursorSelect(
+            "SELECT WeekDayID FROM WeekDay WHERE Name=?", [day]
+        )[0][0]
+    except:
+        print("Not a valid weekday.")
 
-    query = ["""SELECT r.TrainRouteID, i.ArrivalTime as Arrival, i.DepartureTime as Departure
-    FROM TrainRoute r 
-    INNER JOIN TrainRouteRunsWeekDays w ON w.TrainRouteID = r.TrainRouteID
-    INNER JOIN IntermediateStationOnTrainRoute i ON r.TrainRouteID = i.TrainRouteID
+    result = executeCursorSelect(
+        """SELECT r.TrainRouteID, i.ArrivalTime as Arrival, i.DepartureTime as Departure
+    FROM TrainRoute r
+    INNER JOIN TrainRouteRunsWeekDays w USING (TrainRouteID)
+    INNER JOIN IntermediateStationOnTrainRoute i USING (TrainRouteID)
     WHERE i.StationsID = ? AND w.WeekDayID = ?
-    """,[selTrainS[0][0], weekDay[0][0]]]
-    
-    result = executeCursorSelect(query[0], query[1])
+    """,
+        [stationID, weekDayID],
+    )
 
-    stations = []
+    startAndEndstations = []
     for i in result:
-        queryStart = ["""SELECT i1.StationsID FROM IntermediateStationOnTrainRoute i1 INNER JOIN TrainRoute r ON r.TrainRouteID = i1.TrainRouteID 
+        startStation = executeCursorSelect(
+            """SELECT ts.Name 
+            FROM Trainstation ts 
+            INNER JOIN IntermediateStationOnTrainRoute i1 USING (StationsID)
+            INNER JOIN TrainRoute r USING (TrainRouteID)
 	        WHERE r.TrainRouteID = ?
-	        ORDER BY 
-		        CASE WHEN r.MainDirection = 0 THEN StationsID ELSE '' END DESC,
-		        CASE WHEN r.MainDirection = 1 THEN StationsID ELSE '' END ASC LIMIT 1""",[i[0]]]
-        startStation = executeCursorSelect(queryStart[0], queryStart[1])
-        queryEnd = ["""SELECT i1.StationsID FROM IntermediateStationOnTrainRoute i1 INNER JOIN TrainRoute r ON r.TrainRouteID = i1.TrainRouteID 
-	        WHERE r.TrainRouteID = ?
-	        ORDER BY 
-		        CASE WHEN r.MainDirection = 0 THEN StationsID ELSE '' END ASC,
-		        CASE WHEN r.MainDirection = 1 THEN StationsID ELSE '' END DESC LIMIT 1""",[i[0]]]
-        endStation = executeCursorSelect(queryEnd[0], queryEnd[1])
-        stations.append([startStation[0][0],endStation[0][0]])
+	        ORDER BY
+		        CASE WHEN r.MainDirection = 0 THEN ts.StationsID ELSE '' END DESC,
+		        CASE WHEN r.MainDirection = 1 THEN ts.StationsID ELSE '' END ASC LIMIT 1""",
+            [i[0]],
+        )
 
-    stationsPrint = []
-    for pair in stations:
-            start = executeCursorSelect("SELECT ts.Name FROM Trainstation ts WHERE ts.StationsID = ?",[pair[0]])
-            end = executeCursorSelect("SELECT ts.Name FROM Trainstation ts WHERE ts.StationsID = ?",[pair[1]])
-            stationsPrint.append([start[0][0],end[0][0]])  
+        endStation = executeCursorSelect(
+            """SELECT ts.Name 
+            FROM Trainstation ts 
+            INNER JOIN IntermediateStationOnTrainRoute i1 USING (StationsID)
+            INNER JOIN TrainRoute r USING (TrainRouteID)
+	        WHERE r.TrainRouteID = ?
+	        ORDER BY
+		        CASE WHEN r.MainDirection = 0 THEN ts.StationsID ELSE '' END ASC,
+		        CASE WHEN r.MainDirection = 1 THEN ts.StationsID ELSE '' END DESC LIMIT 1""",
+            [i[0]],
+        )
+        startAndEndstations.append([startStation[0][0], endStation[0][0]])
 
     stationTimeTable = PrettyTable()
 
-    stationTimeTable.field_names =["TrainRouteID","From", "To", "Arrival","Departure"]
-    print("\n")
-    print("=====================")
+    stationTimeTable.field_names = [
+        "TrainRouteID",
+        "From",
+        "To",
+        "Arrival",
+        "Departure",
+    ]
     for i in range(len(result)):
-        stationTimeTable.add_row([result[i][0],stationsPrint[i][0], stationsPrint[i][1], result[i][1],result[i][2]])
+        stationTimeTable.add_row(
+            [
+                result[i][0],
+                startAndEndstations[i][0],
+                startAndEndstations[i][1],
+                result[i][1],
+                result[i][2],
+            ]
+        )
 
     print(stationTimeTable)
-    print("=====================")
+    print("")
 
 
 def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day, time):
-    startStationID = executeCursorSelect("SELECT StationsID FROM Trainstation WHERE name = ?", [startStation])[0][0]
-    endStationID = executeCursorSelect("SELECT StationsID FROM Trainstation WHERE name = ?", [endStation])[0][0]
+    print("")
+    try:
+        startStationID = executeCursorSelect(
+            "SELECT StationsID FROM Trainstation WHERE name = ?", [startStation]
+        )[0][0]
+    except:
+        print("Not a valid start station.")
+        return
+    
+    try: 
+        endStationID = executeCursorSelect(
+            "SELECT StationsID FROM Trainstation WHERE name = ?", [endStation]
+        )[0][0]
+    except:
+        print("Not a valid end station.")
+        return
 
     result = executeCursorSelect("""
-    WITH test AS (SELECT TrainRouteID,  StationsID, StationOrder, MainDirection FROM IntermediateStationOnTrainRoute 
+    WITH StationsWithOrder AS 
+        (SELECT TrainRouteID,  StationsID, StationOrder, MainDirection, ArrivalTime, DepartureTime 
+        FROM IntermediateStationOnTrainRoute 
         INNER JOIN TrainRoute USING (TrainRouteID) 
-        INNER JOIN IntermediateStationOnTrackStretch USING (TrackID, StationsID)  
-        WHERE StationsID = ? OR StationsID = ?)
-    SELECT TrainRouteID, Time, InstanceID FROM TrainRouteInstance INNER JOIN
-        (SELECT a.TrainRouteID, a.MainDirection, minStation, minStationOrder, maxStation,maxStationOrder
-        FROM (SELECT TrainRouteID, StationsID as minStation, min(StationOrder) as minStationOrder, MainDirection FROM test GROUP BY TrainRouteID) as a
-        INNER JOIN (SELECT TrainRouteID, StationsID as maxStation, max(StationOrder) as maxStationOrder FROM test GROUP BY TrainRouteID) AS b USING (TrainRouteID))
-        USING (TrainRouteID)
-        WHERE ((MainDirection == 1 AND minStation = ? AND maxStation == ?) OR (MainDirection == 0 AND maxStation = ? AND minStation == ?))
-        AND (Time = date(?) or Time = date(?, "+1 day"))
-	""", [startStationID, endStationID, startStationID, endStationID, startStationID, endStationID, day, day]
+        INNER JOIN IntermediateStationOnTrackStretch USING (TrackID, StationsID) 
+        WHERE StationsID = ?1 OR StationsID = ?2)
+        
+    SELECT TrainRouteID, Time as Date, DepartureStation, DepartureTime, ArrivalStation, ArrivalTime, InstanceID
+    FROM TrainRouteInstance
+    INNER JOIN
+        (SELECT TrainRouteID, MainDirection, minStation, minStationOrder, maxStation,maxStationOrder,
+        CASE WHEN MainDirection = 1 THEN mi.DepartureTime ELSE ma.DepartureTime END AS DepartureTime,
+        CASE WHEN MainDirection = 1 THEN ma.ArrivalTime ELSE mi.ArrivalTime END AS ArrivalTime,
+        CASE WHEN MainDirection = 1 THEN mi.StationName ELSE ma.StationName END AS DepartureStation,
+        CASE WHEN MainDirection = 1 THEN ma.StationName ELSE mi.StationName END AS ArrivalStation
+        FROM
+            (SELECT TrainRouteID, StationsID AS minStation, min(StationOrder) AS minStationOrder, MainDirection, DepartureTime, ArrivalTime, Name as StationName
+            FROM StationsWithOrder
+            INNER JOIN Trainstation USING (StationsID)
+            GROUP BY TrainRouteID)
+        AS mi
+        INNER JOIN
+            (SELECT TrainRouteID, StationsID AS maxStation, max(StationOrder) AS maxStationOrder, DepartureTime, ArrivalTime, Name as StationName
+            FROM StationsWithOrder
+            INNER JOIN Trainstation USING (StationsID)
+            GROUP BY TrainRouteID)
+        AS ma
+        USING (TrainRouteID))
+    USING (TrainRouteID)
+    WHERE ((MainDirection == 1 AND minStation = ?1 AND maxStation == ?2)
+    OR (MainDirection == 0 AND maxStation = ?1 AND minStation == ?2))
+    AND (Time = date(?3) or Time = date(?3, "+1 day"))
+    AND DepartureTime >= time(?4)
+    """,
+        [startStationID, endStationID, date.today() if day == "" else day, "00:00:00" if time == "" else time],
     )
     print(result)
     stationTimeTable = PrettyTable()
 
-    stationTimeTable.field_names = ["TrainRoute","Date"]
+    stationTimeTable.field_names = [
+        "TrainRoute",
+        "Date",
+        "Departure Station",
+        "Departure Time",
+        "Arrival Station",
+        "Arrival Time",
+    ]
     for i in result:
-        stationTimeTable.add_row([i[0],i[1]])
+        stationTimeTable.add_row([i[0], i[1], i[2], i[3], i[4], i[5]])
 
     print(stationTimeTable)
     print("\n")
@@ -112,17 +186,44 @@ the travel you want to buy tickets to.""")
         except Exception as error:
             print("Not a legal route.")
             continue
-    buyTickets(result[chosenTravel][2],result[chosenTravel][0],loggedInUser)
+    buyTickets(result[chosenTravel][6],result[chosenTravel][0],loggedInUser)
+
+def ticketsByLoggedinCustomer():
+    result = executeCursorSelect(
+        """SELECT co.OrderNumber, co.Time, t.InstanceID, t.PassengerPlaceID, tri.Time, c.Name 
+        FROM CustomerOrder co 
+        NATURAL JOIN Ticket t
+        INNER JOIN TrainRouteInstance tri USING (InstanceID) 
+        Natural JOIN Customer c
+            WHERE c.Email == ?
+        """,
+        [loggedInUser["email"]],
+    )
+
+    pt = PrettyTable()
+
+    pt.field_names = [
+        "Order number",
+        "Purchase date",
+        "train route instance id",
+        "passanger place id",
+        "ticket valid date",
+        "ticket customer",
+    ]
+    for i in result:
+        pt.add_row([i[0], i[1], i[2], i[3], i[4], i[5]])
+    print(pt, "\n")
+
 
 
 def register():
-    print("Thank you for wanting to be registered as a new customer.")
-    print("Please type in your information")
+    print("Thank you for wanting to be registered as a new customer.\n")
+    print("Please type in your information:")
 
-    name = input("Name: ")
-    email = input("Email: ")
-    address = input("Address: ")
-    tellephone_number = input("Telephone number: ")
+    name = input("  Name: ")
+    email = input("  Email: ")
+    address = input("  Address: ")
+    tellephone_number = input("  Telephone number: ")
 
     while (
         executeCursorSelect(
@@ -132,13 +233,13 @@ def register():
         != []
     ):
         print(
-            "Either the email or the tellephone number is unfortunately allready registered on another customer."
+            "The chosen email or the tellephone number is not avaiable, because it's already used."
         )
-        print("Please try again :)")
-        name = input("Name: ")
-        email = input("Email: ")
-        address = input("Address: ")
-        tellephone_number = input("Telephone number: ")
+        print("\nPlease try again:)")
+        name = input("  Name: ")
+        email = input("  Email: ")
+        address = input("  Address: ")
+        tellephone_number = input("  Telephone number: ")
 
     # this goes to shit when the private key is id. total shit
     # This just doesn't work atm, it doesn't actually insert into the database it seems.
@@ -147,29 +248,30 @@ def register():
         [name, email, address, tellephone_number],
     )
     con.commit()
-    print("Fantastic!! You are now registered as a user.")
-    print("You now will be transfer to the login interface. ")
+    print("\nFantastic!! You are now registered as a user.")
+    print("You now will be transfer to the login interface.\n")
 
     login()
 
 
 def login():
-    email = input("Epost: ")
+    email = input("Email: ")
     user = executeCursorSelect(
         "SELECT CustomerNumber, Name, Email, Address, TelephoneNumber  FROM Customer WHERE Email = ?",
         [email],
     )
 
     while user == []:
-        print("The provided email was not found.")
-        print("Please try again. ")
-        email = input("Epost: ")
+        print("\nThe provided email was not found.")
+        print("Please try again\n")
+        email = input("Email: ")
         user = executeCursorSelect(
         "SELECT * FROM Customer WHERE Email = ?",
         [email],
     )
 
-    print("Wonderful!!! You are now logged in ")
+    print("\nWonderful!!! You are now logged in\n")
+
     global loggedInUser
     loggedInUser = {
         "CustomerNumber": user[0][0],
@@ -181,12 +283,14 @@ def login():
 
 
 def main():
-    print("Welcome to the trainstation database :)")
+    print("\nWelcome to the trainstation database :)\n")
     print("Please register a user og login if you allready have a user")
-    print("- 1 -> Register")
-    print("- 2 -> Login")
+    print("  1 -> Register")
+    print("  2 -> Login")
+    print("")
 
-    response = input("what to do... :")
+    response = input("What do you want to do... : ")
+    print("")
 
     register() if (response == "1") else login()
 
@@ -201,18 +305,19 @@ def main():
             " - Type 3 to buy tickets on a given route\n"
         )
         response = input("Type in your answer: ")
+        print("")
 
         match response:
             case "1":
                 trainStation = input("Which trainStation do you wish to check: ")
-                day = input("Which day do you wish to check for: ")
+                day = input("Which weekday do you wish to check for (E.g. Monday, Tuesday, etc.): ")
                 trainRoutesByDayAndTrainStation(trainStation, day)
 
             case "2":
-                startStation = input("Start station: ")
-                endStation = input("End station: ")
-                day = input("Which day do you wish to travel: ")
-                time = input("At what time do you wish to travel: ")
+                startStation = input("What's the start station: ")
+                endStation = input("What's the end station: ")
+                day = input("Which day do you wish to travel (yyyy-MM-dd): ")
+                time = input("At what time do you wish to travel (hh:mm:ss):")
                 trainRoutesByStartAndEndStationsAndDayAndTime(
                     startStation, endStation, day, time
                 )
