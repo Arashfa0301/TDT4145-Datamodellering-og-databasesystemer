@@ -205,8 +205,9 @@ the travel you want to buy tickets to."""
 
 def ticketsByLoggedinCustomer():
     result = executeCursorSelect(
-        """SELECT co.OrderNumber, co.Time, tri.TrainRouteID, t.PassengerPlaceID, tri.Time, c.Name
-
+        """
+        SELECT co.OrderNumber, co.Time, tri.TrainRouteID, t.PassengerPlaceID, tri.Time, c.Name 
+        FROM CustomerOrder co
         NATURAL JOIN Ticket t
         NATURAL JOIN Customer c
         NATURAL JOIN PassengerPlace pp
