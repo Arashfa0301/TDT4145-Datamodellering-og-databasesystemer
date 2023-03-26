@@ -132,6 +132,13 @@ def fillDatabase():
     cursor.execute("INSERT INTO TrainRouteInstance VALUES (4, 2, date('2023-04-03'))")
     cursor.execute("INSERT INTO TrainRouteInstance VALUES (5, 2, date('2023-04-04'))")
 
+
+
+
+    cursor.execute(
+        'INSERT INTO Customer VALUES(0, "Per", "per@gmail.com", "Høgskoleringen 1, 7034 Trondheim", 88888888)'
+    )
+
     ## Script for adding the PassengerPlaces for all trainrouteinstances
     cursor.execute('SELECT InstanceID, TrainRouteID FROM TrainRouteInstance')
     trainrouteInstances = cursor.fetchall()
@@ -162,6 +169,7 @@ def fillDatabase():
                 for j in range(numOfPlaces):
                     cursor.execute('INSERT INTO PassengerPlace VALUES(?,?,?)',[i,wagon[0],wagInst[0]])
                     i+=1
+                    
 
     con.commit()
     con.close()
