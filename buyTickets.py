@@ -174,9 +174,9 @@ def printWagon(type, numRowsOrCol, rowWidth, nonAvailableSeats, startIDWagon):
         k = startIDWagon
         print(" ------------ ")
         for i in range(numRowsOrCol*2):
-            if k >= startIDWagon + numRowsOrCol*2:
+            if k > startIDWagon + numRowsOrCol*2:
                 break
-            if k not in nonAvailableSeats and k+1 not in nonAvailableSeats:
+            elif k not in nonAvailableSeats and (k+1 not in nonAvailableSeats or k == numRowsOrCol*2):
                 if k < 10:
                     comp = (f"|    |{k}-----#|")
                 elif k < 100:
@@ -188,7 +188,6 @@ def printWagon(type, numRowsOrCol, rowWidth, nonAvailableSeats, startIDWagon):
                     print("| Dør|       |")
                 else:
                     print("|    |———————|")
-                    
             else:
                 comp = f"|    |X-----#|\n"
                 comp += f"| Dør|       |\n"
