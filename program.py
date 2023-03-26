@@ -171,13 +171,17 @@ def trainRoutesByStartAndEndStationsAndDayAndTime():
 
     print(stationTimeTable)
     print("\n")
-    return result
+    return [result, startStation, endStation]
 
 
 def buyAvailableTicketsOnGivenTrainRoute():
     # Run the search function first and pass into here:
     # 0 Should be the id
-    result = trainRoutesByStartAndEndStationsAndDayAndTime()
+
+    arrayResult = trainRoutesByStartAndEndStationsAndDayAndTime()
+    result = arrayResult[0]
+    startStation = arrayResult[1]
+    endStation = arrayResult[2]
     print(
         """"
 To choose: Write the index (first =  1) of
@@ -185,8 +189,6 @@ the travel you want to buy tickets to."""
     )
     while True:
         chosenTravel = int(input("On which route do you want to travel?: ")) - 1
-        startStation = input("Input the start station: ")
-        endStation = input("Input the end station: ")
         try:
             result[chosenTravel]
             break
