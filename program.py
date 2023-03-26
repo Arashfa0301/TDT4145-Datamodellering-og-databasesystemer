@@ -167,8 +167,11 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
 
 def ticketsByLoggedinCustomer():
     result = executeCursorSelect(
-        """SELECT co.OrderNumber, co.Time, t.InstanceID, t.PassengerPlaceID, tri.Time, c.Name FROM CustomerOrder co NATURAL JOIN Ticket t
-        INNER JOIN TrainRouteInstance tri ON t.InstanceID = tri.InstanceID Natural JOIN Customer c
+        """SELECT co.OrderNumber, co.Time, t.InstanceID, t.PassengerPlaceID, tri.Time, c.Name 
+        FROM CustomerOrder co 
+        NATURAL JOIN Ticket t
+        INNER JOIN TrainRouteInstance tri USING (InstanceID) 
+        Natural JOIN Customer c
             WHERE c.Email == ?
         """,
         [loggedInUser["email"]],
