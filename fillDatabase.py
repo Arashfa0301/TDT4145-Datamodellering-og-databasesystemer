@@ -135,7 +135,7 @@ def fillDatabase():
     # To be romoved:
 
     cursor.execute(
-        'INSERT INTO Customer VALUES(0, "Viljan", "viljan@gmail.com", "Lyngveien 15", 96622317)'
+        'INSERT INTO Customer VALUES(0, "Per", "per@gmail.com", "Høgskoleringen 1, 7034 Trondheim", 88888888)'
     )
     cursor.execute('INSERT INTO Customer VALUES(1, "arash", "arash", "arash", 1)')
 

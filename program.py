@@ -142,8 +142,9 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
     USING (TrainRouteID)
     WHERE ((MainDirection == 1 AND minStation = ?1 AND maxStation == ?2)
     OR (MainDirection == 0 AND maxStation = ?1 AND minStation == ?2))
-    AND (Time = date(?3) or Time = date(?3, "+1 day"))
-    AND DepartureTime >= time(?4)
+    AND ((Time = date(?3) AND DepartureTime >= time(?4)) 
+    OR Time = date(?3, "+1 day"))
+    ORDER BY Date ASC, DepartureTime ASC
     """,
         [startStationID, endStationID, date.today() if day == "" else day, "00:00:00" if time == "" else time],
     )
@@ -190,7 +191,6 @@ def ticketsByLoggedinCustomer():
     for i in result:
         pt.add_row([i[0], i[1], i[2], i[3], i[4], i[5]])
     print(pt, "\n")
-
 
 def register():
     print("Thank you for wanting to be registered as a new customer.\n")
@@ -256,6 +256,25 @@ def login():
         "telephoneNumber": user[0][3],
     }
 
+def displayUserInfo():
+    result = executeCursorSelect(
+        """SELECT Name, Email, Address, TelephoneNumber FROM Customer WHERE Email = ?
+        """,
+        [loggedInUser["email"]],
+    )
+
+    pt = PrettyTable()
+
+    pt.field_names = [
+        "Name",
+        "Email",
+        "Address",
+        "Telephone Number",
+    ]
+    for i in result:
+        pt.add_row([i[0], i[1], i[2], i[3]])
+    print(pt, "\n")
+
 
 def main():
     print("\nWelcome to the trainstation database :)\n")
@@ -271,20 +290,23 @@ def main():
 
     while True:
         print(
-            " - Type 1 to list all the available trainRoutes at a given day and trainStation\n "
+            " - Type 1 to list all the avaiable train routes at a given weekday and train station\n "
         )
         print(
-            " - Type 2 to list all the available trainRoutes that pass though given start and end stations at a given day and time\n "
+            " - Type 2 to list all the available train routes that pass through given start and end stations at a given day and time\n "
         )
         print(
             " - Type 3 to list all your tickets\n "
+        )
+        print(
+            " - Type 9 to see user information"
         )
         response = input("Type in your answer: ")
         print("")
 
         match response:
             case "1":
-                trainStation = input("Which trainStation do you wish to check: ")
+                trainStation = input("Which train staiton do you wish to check: ")
                 day = input("Which weekday do you wish to check for (E.g. Monday, Tuesday, etc.): ")
                 trainRoutesByDayAndTrainStation(trainStation, day)
 
@@ -292,12 +314,14 @@ def main():
                 startStation = input("What's the start station: ")
                 endStation = input("What's the end station: ")
                 day = input("Which day do you wish to travel (yyyy-MM-dd): ")
-                time = input("At what time do you wish to travel (hh:mm:ss):")
+                time = input("At what time do you wish to travel (hh:mm:ss): ")
                 trainRoutesByStartAndEndStationsAndDayAndTime(
                     startStation, endStation, day, time
                 )
             case "3":
                 ticketsByLoggedinCustomer()
+            case "9":
+                displayUserInfo()
 
             case _:
                 con.close()
