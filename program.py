@@ -80,56 +80,89 @@ def trainRoutesByDayAndTrainStation(trainStation, day):
 
 
 def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day, time):
-    startStationID = executeCursorSelect("SELECT StationsID FROM Trainstation WHERE name = ?", [startStation])[0][0]
-    endStationID = executeCursorSelect("SELECT StationsID FROM Trainstation WHERE name = ?", [endStation])[0][0]
+    startStationID = executeCursorSelect(
+        "SELECT StationsID FROM Trainstation WHERE name = ?", [startStation]
+    )[0][0]
+    endStationID = executeCursorSelect(
+        "SELECT StationsID FROM Trainstation WHERE name = ?", [endStation]
+    )[0][0]
 
-    if time == "":
-        time = "00:00:00"
-
-    result = executeCursorSelect("""
-    WITH StationsWithOrder AS 
-        (SELECT TrainRouteID,  StationsID, StationOrder, MainDirection, ArrivalTime, DepartureTime 
-        FROM IntermediateStationOnTrainRoute 
-        INNER JOIN TrainRoute USING (TrainRouteID) 
-        INNER JOIN IntermediateStationOnTrackStretch USING (TrackID, StationsID) 
+    result = executeCursorSelect(
+        """
+    WITH StationsWithOrder AS
+        (SELECT TrainRouteID,  StationsID, StationOrder, MainDirection, ArrivalTime, DepartureTime
+        FROM IntermediateStationOnTrainRoute
+        INNER JOIN TrainRoute USING (TrainRouteID)
+        INNER JOIN IntermediateStationOnTrackStretch USING (TrackID, StationsID)
         WHERE StationsID = ?1 OR StationsID = ?2)
-    SELECT TrainRouteID, Time as Date, DepartureStation, DepartureTime, ArrivalStation, ArrivalTime 
+    SELECT TrainRouteID, Time as Date, DepartureStation, DepartureTime, ArrivalStation, ArrivalTime
     FROM TrainRouteInstance
     INNER JOIN
         (SELECT TrainRouteID, MainDirection, minStation, minStationOrder, maxStation,maxStationOrder,
-        CASE WHEN MainDirection = 1 THEN mi.DepartureTime ELSE ma.DepartureTime END AS DepartureTime, 
+        CASE WHEN MainDirection = 1 THEN mi.DepartureTime ELSE ma.DepartureTime END AS DepartureTime,
         CASE WHEN MainDirection = 1 THEN ma.ArrivalTime ELSE mi.ArrivalTime END AS ArrivalTime,
         CASE WHEN MainDirection = 1 THEN mi.StationName ELSE ma.StationName END AS DepartureStation,
         CASE WHEN MainDirection = 1 THEN ma.StationName ELSE mi.StationName END AS ArrivalStation
-        FROM 
-            (SELECT TrainRouteID, StationsID AS minStation, min(StationOrder) AS minStationOrder, MainDirection, DepartureTime, ArrivalTime, Name as StationName 
-            FROM StationsWithOrder 
-            INNER JOIN Trainstation USING (StationsID) 
-            GROUP BY TrainRouteID) 
+        FROM
+            (SELECT TrainRouteID, StationsID AS minStation, min(StationOrder) AS minStationOrder, MainDirection, DepartureTime, ArrivalTime, Name as StationName
+            FROM StationsWithOrder
+            INNER JOIN Trainstation USING (StationsID)
+            GROUP BY TrainRouteID)
         AS mi
-        INNER JOIN 
-            (SELECT TrainRouteID, StationsID AS maxStation, max(StationOrder) AS maxStationOrder, DepartureTime, ArrivalTime, Name as StationName 
-            FROM StationsWithOrder 
-            INNER JOIN Trainstation USING (StationsID) 
-            GROUP BY TrainRouteID) 
-        AS ma 
+        INNER JOIN
+            (SELECT TrainRouteID, StationsID AS maxStation, max(StationOrder) AS maxStationOrder, DepartureTime, ArrivalTime, Name as StationName
+            FROM StationsWithOrder
+            INNER JOIN Trainstation USING (StationsID)
+            GROUP BY TrainRouteID)
+        AS ma
         USING (TrainRouteID))
     USING (TrainRouteID)
-    WHERE ((MainDirection == 1 AND minStation = ?1 AND maxStation == ?2) 
+    WHERE ((MainDirection == 1 AND minStation = ?1 AND maxStation == ?2)
     OR (MainDirection == 0 AND maxStation = ?1 AND minStation == ?2))
-    AND (Time = date(?3) or Time = date(?3, "+1 day")) 
-    AND DepartureTime >= time(?4)
-	  """, [startStationID, endStationID, day, time]
+    AND (Time = date(?3) or Time = date(?3, "+1 day"))
+     AND DepartureTime >= time(?4)
+	  """,
+        [startStationID, endStationID, day, "00:00:00" if time == "" else time],
     )
 
     stationTimeTable = PrettyTable()
 
-    stationTimeTable.field_names = ["TrainRoute","Date", "Departure Station", "Departure Time", "Arrival Station", "Arrival Time"]
+    stationTimeTable.field_names = [
+        "TrainRoute",
+        "Date",
+        "Departure Station",
+        "Departure Time",
+        "Arrival Station",
+        "Arrival Time",
+    ]
     for i in result:
-        stationTimeTable.add_row([i[0],i[1],i[2],i[3],i[4],i[5]])
+        stationTimeTable.add_row([i[0], i[1], i[2], i[3], i[4], i[5]])
 
-    print(stationTimeTable)
-    print("\n")
+    print(stationTimeTable, "\n")
+
+
+def ticketsByLoggedinCustomer():
+    result = executeCursorSelect(
+        """SELECT co.OrderNumber, co.Time, t.InstanceID, t.PassengerPlaceID, tri.Time, c.Name FROM CustomerOrder co NATURAL JOIN Ticket t
+        INNER JOIN TrainRouteInstance tri ON t.InstanceID = tri.InstanceID Natural JOIN Customer c
+            WHERE c.Email == ?
+        """,
+        [loggedInUser["email"]],
+    )
+
+    pt = PrettyTable()
+
+    pt.field_names = [
+        "Order number",
+        "Purchase date",
+        "train route instance id",
+        "passanger place id",
+        "ticket valid date",
+        "ticket customer",
+    ]
+    for i in result:
+        pt.add_row([i[0], i[1], i[2], i[3], i[4], i[5]])
+    print(pt, "\n")
 
 
 def register():
@@ -233,6 +266,8 @@ def main():
                 trainRoutesByStartAndEndStationsAndDayAndTime(
                     startStation, endStation, day, time
                 )
+            case "3":
+                ticketsByLoggedinCustomer()
 
             case _:
                 con.close()
