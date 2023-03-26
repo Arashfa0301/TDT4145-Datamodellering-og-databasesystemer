@@ -51,7 +51,7 @@ def fillDatabase():
     cursor.execute("INSERT INTO TrainRoute VALUES (2,0,0,1)")
 
     cursor.execute(
-        "INSERT INTO IntermediateStationOnTrainRoute VALUES (0,0,time('17:34:00'),time('17:34:00'))"
+        "INSERT INTO IntermediateStationOnTrainRoute VALUES (0,0,time('17:34:00'),'')"
     )
     cursor.execute(
         "INSERT INTO IntermediateStationOnTrainRoute VALUES (0,1,time('16:49:00'),time('16:49:00'))"
@@ -66,11 +66,11 @@ def fillDatabase():
         "INSERT INTO IntermediateStationOnTrainRoute VALUES (0,4,time('09:51:00'),time('09:51:00'))"
     )
     cursor.execute(
-        "INSERT INTO IntermediateStationOnTrainRoute VALUES (0,5,time('07:49:00'),time('07:49:00'))"
+        "INSERT INTO IntermediateStationOnTrainRoute VALUES (0,5,'',time('07:49:00'))"
     )
 
     cursor.execute(
-        "INSERT INTO IntermediateStationOnTrainRoute VALUES (1,0,time('09:05:00'),time('09:05:00'))"
+        "INSERT INTO IntermediateStationOnTrainRoute VALUES (1,0,time('09:05:00'),'')"
     )
     cursor.execute(
         "INSERT INTO IntermediateStationOnTrainRoute VALUES (1,1,time('08:19:00'),time('08:19:00'))"
@@ -85,11 +85,11 @@ def fillDatabase():
         "INSERT INTO IntermediateStationOnTrainRoute VALUES (1,4,time('00:57:00'),time('00:57:00'))"
     )
     cursor.execute(
-        "INSERT INTO IntermediateStationOnTrainRoute VALUES (1,5,time('23:05:00'),time('23:05:00'))"
+        "INSERT INTO IntermediateStationOnTrainRoute VALUES (1,5,'',time('23:05:00'))"
     )
 
     cursor.execute(
-        "INSERT INTO IntermediateStationOnTrainRoute VALUES (2,2,time('08:11:00'),time('08:11:00'))"
+        "INSERT INTO IntermediateStationOnTrainRoute VALUES (2,2,'',time('08:11:00'))"
     )
     cursor.execute(
         "INSERT INTO IntermediateStationOnTrainRoute VALUES (2,3,time('09:14:00'),time('09:14:00'))"
@@ -98,7 +98,7 @@ def fillDatabase():
         "INSERT INTO IntermediateStationOnTrainRoute VALUES (2,4,time('12:31:00'),time('12:31:00'))"
     )
     cursor.execute(
-        "INSERT INTO IntermediateStationOnTrainRoute VALUES (2,5,time('14:12:00'),time('14:12:00'))"
+        "INSERT INTO IntermediateStationOnTrainRoute VALUES (2,5,time('14:13:00'),'')"
     )
 
     cursor.execute("INSERT INTO WagonLayout VALUES (0,0,1)")
