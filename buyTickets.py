@@ -122,7 +122,7 @@ def findPartialTrackStretch(startStation, endStation,TrainRouteID):
         for partTrack in partTrackStretches:
             if startStationID == partTrack[4]:
                 partOfTrackIDs.append(partTrack[0])
-            if not len(partOfTrackIDs) == 0:
+            elif not len(partOfTrackIDs) == 0:
                 if endStationID == partTrack[4]:
                     break
                 else:
