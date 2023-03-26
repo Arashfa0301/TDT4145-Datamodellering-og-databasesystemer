@@ -208,7 +208,7 @@ the travel you want to buy tickets to."""
 def ticketsByLoggedinCustomer():
     result = executeCursorSelect(
         """
-                SELECT co.OrderNumber, co.Time, tri.TrainRouteID, t.PassengerPlaceID, tri.Time, c.Name, w.Name
+                SELECT co.OrderNumber, co.Time, tri.TrainRouteID, t.PassengerPlaceID, tri.Time, c.Name, w.Name, t.TicketID
         FROM CustomerOrder co
         NATURAL JOIN Ticket t
         NATURAL JOIN Customer c
@@ -237,15 +237,15 @@ def ticketsByLoggedinCustomer():
     for i in result:
         trackStretches = executeCursorSelect(
             """
-        SELECT StartStation, EndStation, StationOrder, MainDirection  FROM IntermediateStationOnTrackStretch
+        SELECT StartStation, EndStation, StationOrder, MainDirection, TicketID  FROM IntermediateStationOnTrackStretch
         INNER JOIN IntermediateStationOnTrainRoute USING (StationsID)
         INNER JOIN PartialTrackStretch on StationsID = StartStation
         INNER JOIN TicketOnPartialTrackStretch USING (PartialTrackStretchID)
         INNER JOIN TrainRoute USING (TrainRouteID)
-        WHERE TrainRouteID = ?
+        WHERE TrainRouteID = ? AND TicketID = ?
         ORDER BY StationOrder ASC
         """,
-            [i[2]],
+            [i[2], i[7]],
         )
         if trackStretches[0][3] == 1:  # Check which direction the trainroute goes
             fromStation = trackStretches[0][0]  # Set from station
