@@ -195,8 +195,9 @@ the travel you want to buy tickets to."""
 
 def ticketsByLoggedinCustomer():
     result = executeCursorSelect(
-        """SELECT co.OrderNumber, co.Time, tr., pp.WagonID, pp.PassengerPlaceID , tri.Time
-            FROM CustomerOrder co
+
+        """SELECT co.OrderNumber, co.Time, tri.TrainRouteID, t.PassengerPlaceID, tri.Time, c.Name 
+
         NATURAL JOIN Ticket t
         NATURAL JOIN Customer c
         NATURAL JOIN PassengerPlace pp
@@ -212,22 +213,35 @@ def ticketsByLoggedinCustomer():
     pt.field_names = [
         "Order number",
         "Purchase date",
-        "train route instance id",
-        "Wagon type",
-        "Seat number",
-        "Travel date",
+        "Train route",
+        "Seat/Bed number",
+        "Ticket date",
+        "Customer",
+        "From Station",
+        "To Station"
     ]
     for i in result:
-        pt.add_row(
-            [
-                i[0],
-                i[1],
-                i[2],
-                "Sitting Wagon" if i[3] == 0 else "Sleeping Wagon",
-                i[4],
-                i[5],
-            ]
-        )
+        trackStretches = executeCursorSelect("""
+        SELECT StartStation, EndStation, StationOrder, MainDirection  FROM IntermediateStationOnTrackStretch 
+        INNER JOIN IntermediateStationOnTrainRoute USING (StationsID) 
+        INNER JOIN PartialTrackStretch on StationsID = StartStation 
+        INNER JOIN TicketOnPartialTrackStretch USING (PartialTrackStretchID) 
+        INNER JOIN TrainRoute USING (TrainRouteID)
+        WHERE TrainRouteID = ?
+        ORDER BY StationOrder ASC       
+        """, [i[2]])
+        if trackStretches[0][3] == 1: #Check which direction the trainroute goes
+            fromStation = trackStretches[0][0] #Set from station
+            toStation = trackStretches[-1][1] #Set to station
+        else:
+            fromStation = trackStretches[-1][1] #Set from station
+            toStation = trackStretches[0][0] #Set to station
+
+        fromStation = executeCursorSelect("SELECT Name FROM Trainstation WHERE StationsID = ?", [fromStation])[0][0]
+        toStation = executeCursorSelect("SELECT Name FROM Trainstation WHERE StationsID = ?", [toStation])[0][0]
+
+        pt.add_row([i[0], i[1], i[2], i[3], i[4], i[5], fromStation, toStation])
+
     print(pt, "\n")
 
 
@@ -332,8 +346,16 @@ def main():
         print(
             " - Type 2 to list all the available train routes that pass through given start and end stations at a given day and time\n "
         )
-        print(" - Type 3 to buy tickets on a given route\n")
-        print(" - Type 9 to see user information")
+
+        print(
+            " - Type 3 to buy tickets on a given route\n"
+        )
+        print(
+            " - Type 4 to see all your bought tickets\n"
+        )
+        print(
+            " - Type 9 to see user information"
+        )
 
         response = input("Type in your answer: ")
 
@@ -349,11 +371,12 @@ def main():
             case "3":
                 buyAvailableTicketsOnGivenTrainRoute()
 
-            case "9":
-                displayUserInfo()
 
             case "4":
                 ticketsByLoggedinCustomer()
+
+            case "9":
+                displayUserInfo()
 
             case _:
                 con.close()
