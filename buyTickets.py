@@ -34,8 +34,8 @@ def buyTickets(InstanceID, TrainRouteID, loggedInUser, startStation, endStation)
         for partialTrackStretchID in partialTrackStretchIDs:
             navSQuery = ["""SELECT t.PassengerPlaceID FROM Ticket t 
                         INNER JOIN TicketOnPartialTrackStretch tp ON t.TicketID = tp.TicketID
-                        WHERE tp.PartialTrackStretchID = ?
-                        """,[partialTrackStretchID]]
+                        WHERE tp.PartialTrackStretchID = ? AND t.InstanceID = ?
+                        """,[partialTrackStretchID, InstanceID]]
             tempNon.append(executeCursorSelect(navSQuery[0],navSQuery[1]))   
 
         for seatInstances in tempNon:
