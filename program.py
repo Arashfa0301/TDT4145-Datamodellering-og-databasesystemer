@@ -6,7 +6,13 @@ from buyTickets import buyTickets
 
 con = sqlite3.connect("trainstationDB.db")
 cursor = con.cursor()
-loggedInUser = None
+loggedInUser = {
+    "CustomerNumber": "arash",
+    "name": "arash",
+    "email": "arash",
+    "address": "arash",
+    "telephoneNumber": 234,
+}
 
 
 def executeCursorSelect(sql, parameters):
@@ -16,7 +22,7 @@ def executeCursorSelect(sql, parameters):
 
 def trainRoutesByDayAndTrainStation(trainStation, day):
     print("")
-    try: 
+    try:
         stationID = executeCursorSelect(
             "SELECT StationsID FROM Trainstation WHERE Name=?", [trainStation]
         )[0][0]
@@ -44,8 +50,8 @@ def trainRoutesByDayAndTrainStation(trainStation, day):
     startAndEndstations = []
     for i in result:
         startStation = executeCursorSelect(
-            """SELECT ts.Name 
-            FROM Trainstation ts 
+            """SELECT ts.Name
+            FROM Trainstation ts
             INNER JOIN IntermediateStationOnTrainRoute i1 USING (StationsID)
             INNER JOIN TrainRoute r USING (TrainRouteID)
 	        WHERE r.TrainRouteID = ?
@@ -56,8 +62,8 @@ def trainRoutesByDayAndTrainStation(trainStation, day):
         )
 
         endStation = executeCursorSelect(
-            """SELECT ts.Name 
-            FROM Trainstation ts 
+            """SELECT ts.Name
+            FROM Trainstation ts
             INNER JOIN IntermediateStationOnTrainRoute i1 USING (StationsID)
             INNER JOIN TrainRoute r USING (TrainRouteID)
 	        WHERE r.TrainRouteID = ?
@@ -101,8 +107,8 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
     except:
         print("Not a valid start station.")
         return
-    
-    try: 
+
+    try:
         endStationID = executeCursorSelect(
             "SELECT StationsID FROM Trainstation WHERE name = ?", [endStation]
         )[0][0]
@@ -110,14 +116,15 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
         print("Not a valid end station.")
         return
 
-    result = executeCursorSelect("""
-    WITH StationsWithOrder AS 
-        (SELECT TrainRouteID,  StationsID, StationOrder, MainDirection, ArrivalTime, DepartureTime 
-        FROM IntermediateStationOnTrainRoute 
-        INNER JOIN TrainRoute USING (TrainRouteID) 
-        INNER JOIN IntermediateStationOnTrackStretch USING (TrackID, StationsID) 
+    result = executeCursorSelect(
+        """
+    WITH StationsWithOrder AS
+        (SELECT TrainRouteID,  StationsID, StationOrder, MainDirection, ArrivalTime, DepartureTime
+        FROM IntermediateStationOnTrainRoute
+        INNER JOIN TrainRoute USING (TrainRouteID)
+        INNER JOIN IntermediateStationOnTrackStretch USING (TrackID, StationsID)
         WHERE StationsID = ?1 OR StationsID = ?2)
-        
+
     SELECT TrainRouteID, Time as Date, DepartureStation, DepartureTime, ArrivalStation, ArrivalTime, InstanceID
     FROM TrainRouteInstance
     INNER JOIN
@@ -145,7 +152,12 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
     AND (Time = date(?3) or Time = date(?3, "+1 day"))
     AND DepartureTime >= time(?4)
     """,
-        [startStationID, endStationID, date.today() if day == "" else day, "00:00:00" if time == "" else time],
+        [
+            startStationID,
+            endStationID,
+            date.today() if day == "" else day,
+            "00:00:00" if time == "" else time,
+        ],
     )
     print(result)
     stationTimeTable = PrettyTable()
@@ -165,6 +177,7 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
     print("\n")
     return result
 
+
 def buyAvailableTicketsOnGivenTrainRoute():
     # Run the search function first and pass into here:
     # 0 Should be the id
@@ -175,45 +188,58 @@ def buyAvailableTicketsOnGivenTrainRoute():
     result = trainRoutesByStartAndEndStationsAndDayAndTime(
         startStation, endStation, day, time
     )
-    print(""""
-To choose: Write the index (first =  1) of 
-the travel you want to buy tickets to.""")
+    print(
+        """"
+To choose: Write the index (first =  1) of
+the travel you want to buy tickets to."""
+    )
     while True:
-        chosenTravel = int(input("On which route do you want to travel?: "))-1
+        chosenTravel = int(input("On which route do you want to travel?: ")) - 1
         try:
             result[chosenTravel]
             break
         except Exception as error:
             print("Not a legal route.")
             continue
-    buyTickets(result[chosenTravel][6],result[chosenTravel][0],loggedInUser)
+    buyTickets(result[chosenTravel][6], result[chosenTravel][0], loggedInUser)
+
 
 def ticketsByLoggedinCustomer():
     result = executeCursorSelect(
-        """SELECT co.OrderNumber, co.Time, t.InstanceID, t.PassengerPlaceID, tri.Time, c.Name 
-        FROM CustomerOrder co 
+        """SELECT co.OrderNumber, co.Time, tr., pp.WagonID, pp.PassengerPlaceID , tri.Time
+            FROM CustomerOrder co
         NATURAL JOIN Ticket t
-        INNER JOIN TrainRouteInstance tri USING (InstanceID) 
-        Natural JOIN Customer c
+        NATURAL JOIN Customer c
+        NATURAL JOIN PassengerPlace pp
+        INNER JOIN TrainRouteInstance tri
+            USING (InstanceID)
+        NATURAL JOIN TrainRoute tr
             WHERE c.Email == ?
         """,
         [loggedInUser["email"]],
     )
 
     pt = PrettyTable()
-
     pt.field_names = [
         "Order number",
         "Purchase date",
         "train route instance id",
-        "passanger place id",
-        "ticket valid date",
-        "ticket customer",
+        "Wagon type",
+        "Seat number",
+        "Travel date",
     ]
     for i in result:
-        pt.add_row([i[0], i[1], i[2], i[3], i[4], i[5]])
+        pt.add_row(
+            [
+                i[0],
+                i[1],
+                i[2],
+                "Sitting Wagon" if i[3] == 0 else "Sleeping Wagon",
+                i[4],
+                i[5],
+            ]
+        )
     print(pt, "\n")
-
 
 
 def register():
@@ -266,9 +292,9 @@ def login():
         print("Please try again\n")
         email = input("Email: ")
         user = executeCursorSelect(
-        "SELECT * FROM Customer WHERE Email = ?",
-        [email],
-    )
+            "SELECT * FROM Customer WHERE Email = ?",
+            [email],
+        )
 
     print("\nWonderful!!! You are now logged in\n")
 
@@ -301,16 +327,16 @@ def main():
         print(
             " - Type 2 to list all the available trainRoutes that pass though given start and end stations at a given day and time\n "
         )
-        print(
-            " - Type 3 to buy tickets on a given route\n"
-        )
+        print(" - Type 3 to buy tickets on a given route\n")
         response = input("Type in your answer: ")
         print("")
 
         match response:
             case "1":
                 trainStation = input("Which trainStation do you wish to check: ")
-                day = input("Which weekday do you wish to check for (E.g. Monday, Tuesday, etc.): ")
+                day = input(
+                    "Which weekday do you wish to check for (E.g. Monday, Tuesday, etc.): "
+                )
                 trainRoutesByDayAndTrainStation(trainStation, day)
 
             case "2":
@@ -326,9 +352,15 @@ def main():
                 print("Currently in beta: Buying tickets")
                 buyAvailableTicketsOnGivenTrainRoute()
 
+            case "4":
+                ticketsByLoggedinCustomer()
+
             case _:
                 con.close()
                 exit()
 
 
 main()
+
+
+ticketsByLoggedinCustomer()

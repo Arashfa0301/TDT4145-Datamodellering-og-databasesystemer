@@ -141,13 +141,11 @@ def fillDatabase():
 
     cursor.execute('INSERT INTO CustomerOrder VALUES(0, date("2022-01-01"), 1)')
 
-    cursor.execute("INSERT INTO PassengerPlace VALUES(0, 0)")
-
-    cursor.execute("INSERT INTO Ticket VALUES(0, 0, 0, 0)")
-    cursor.execute("INSERT INTO Ticket VALUES(1, 0, 1, 0)")
-    cursor.execute("INSERT INTO Ticket VALUES(2, 0, 2, 0)")
-    cursor.execute("INSERT INTO Ticket VALUES(3, 0, 2, 0)")
-    cursor.execute("INSERT INTO Ticket VALUES(4, 0, 2, 0)")
+    cursor.execute("INSERT INTO Ticket VALUES(0, 0, 0, 5)")
+    cursor.execute("INSERT INTO Ticket VALUES(1, 0, 1, 7)")
+    cursor.execute("INSERT INTO Ticket VALUES(2, 0, 2, 16)")
+    cursor.execute("INSERT INTO Ticket VALUES(3, 0, 2, 17)")
+    cursor.execute("INSERT INTO Ticket VALUES(4, 0, 2, 18)")
 
     cursor.execute('INSERT INTO PassengerPlace VALUES(1,0,0)')
     cursor.execute('INSERT INTO PassengerPlace VALUES(2,0,0)')
@@ -155,24 +153,22 @@ def fillDatabase():
     cursor.execute('INSERT INTO PassengerPlace VALUES(4,0,0)')
     cursor.execute('INSERT INTO PassengerPlace VALUES(5,0,0)')
     cursor.execute('INSERT INTO PassengerPlace VALUES(6,0,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(7,0,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(8,0,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(7,0,1)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(8,0,1)')
     cursor.execute('INSERT INTO PassengerPlace VALUES(9,0,0)')
     cursor.execute('INSERT INTO PassengerPlace VALUES(10,0,0)')
     cursor.execute('INSERT INTO PassengerPlace VALUES(11,0,0)')
     cursor.execute('INSERT INTO PassengerPlace VALUES(12,0,0)')
-    
+
     cursor.execute('INSERT INTO PassengerPlace VALUES(13,1,0)')
     cursor.execute('INSERT INTO PassengerPlace VALUES(14,1,0)')
     cursor.execute('INSERT INTO PassengerPlace VALUES(15,1,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(16,1,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(17,1,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(18,1,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(16,1,2)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(17,1,2)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(18,1,2)')
     cursor.execute('INSERT INTO PassengerPlace VALUES(19,1,0)')
     cursor.execute('INSERT INTO PassengerPlace VALUES(20,1,0)')
-    
-    cursor.execute('INSERT INTO Ticket VALUES(0,0,0,7)')    
-    cursor.execute('INSERT INTO Ticket VALUES(1,0,0,8)')    
+
 
     con.commit()
     con.close()
