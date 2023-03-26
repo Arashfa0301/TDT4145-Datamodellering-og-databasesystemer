@@ -2,7 +2,7 @@ import sqlite3
 
 from prettytable import PrettyTable
 from datetime import date
-
+from buyTickets import buyTickets
 
 con = sqlite3.connect("trainstationDB.db")
 cursor = con.cursor()
@@ -118,7 +118,7 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
         INNER JOIN IntermediateStationOnTrackStretch USING (TrackID, StationsID) 
         WHERE StationsID = ?1 OR StationsID = ?2)
         
-    SELECT TrainRouteID, Time as Date, DepartureStation, DepartureTime, ArrivalStation, ArrivalTime 
+    SELECT TrainRouteID, Time as Date, DepartureStation, DepartureTime, ArrivalStation, ArrivalTime, InstanceID
     FROM TrainRouteInstance
     INNER JOIN
         (SELECT TrainRouteID, MainDirection, minStation, minStationOrder, maxStation,maxStationOrder,
@@ -147,7 +147,7 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
     """,
         [startStationID, endStationID, date.today() if day == "" else day, "00:00:00" if time == "" else time],
     )
-
+    print(result)
     stationTimeTable = PrettyTable()
 
     stationTimeTable.field_names = [
@@ -162,8 +162,31 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
         stationTimeTable.add_row([i[0], i[1], i[2], i[3], i[4], i[5]])
 
     print(stationTimeTable)
-    print("")
+    print("\n")
+    return result
 
+def buyAvailableTicketsOnGivenTrainRoute():
+    # Run the search function first and pass into here:
+    # 0 Should be the id
+    startStation = input("Start station: ")
+    endStation = input("End station: ")
+    day = input("Which day do you wish to travel: ")
+    time = input("At what time do you wish to travel: ")
+    result = trainRoutesByStartAndEndStationsAndDayAndTime(
+        startStation, endStation, day, time
+    )
+    print(""""
+To choose: Write the index (first =  1) of 
+the travel you want to buy tickets to.""")
+    while True:
+        chosenTravel = int(input("On which route do you want to travel?: "))-1
+        try:
+            result[chosenTravel]
+            break
+        except Exception as error:
+            print("Not a legal route.")
+            continue
+    buyTickets(result[chosenTravel][6],result[chosenTravel][0],loggedInUser)
 
 def ticketsByLoggedinCustomer():
     result = executeCursorSelect(
@@ -190,6 +213,7 @@ def ticketsByLoggedinCustomer():
     for i in result:
         pt.add_row([i[0], i[1], i[2], i[3], i[4], i[5]])
     print(pt, "\n")
+
 
 
 def register():
@@ -233,7 +257,7 @@ def register():
 def login():
     email = input("Email: ")
     user = executeCursorSelect(
-        "SELECT Name, Email, Address, TelephoneNumber FROM Customer WHERE Email = ?",
+        "SELECT CustomerNumber, Name, Email, Address, TelephoneNumber  FROM Customer WHERE Email = ?",
         [email],
     )
 
@@ -242,18 +266,19 @@ def login():
         print("Please try again\n")
         email = input("Email: ")
         user = executeCursorSelect(
-            "SELECT Name, Email, Address, TelephoneNumber FROM Customer WHERE Email = ?",
-            [email],
-        )
+        "SELECT * FROM Customer WHERE Email = ?",
+        [email],
+    )
 
     print("\nWonderful!!! You are now logged in\n")
 
     global loggedInUser
     loggedInUser = {
-        "name": user[0][0],
-        "email": user[0][1],
-        "address": user[0][2],
-        "telephoneNumber": user[0][3],
+        "CustomerNumber": user[0][0],
+        "name": user[0][1],
+        "email": user[0][2],
+        "address": user[0][3],
+        "telephoneNumber": user[0][4],
     }
 
 
@@ -277,7 +302,7 @@ def main():
             " - Type 2 to list all the available trainRoutes that pass though given start and end stations at a given day and time\n "
         )
         print(
-            " - Type 3 to list all your tickets\n "
+            " - Type 3 to buy tickets on a given route\n"
         )
         response = input("Type in your answer: ")
         print("")
@@ -296,8 +321,10 @@ def main():
                 trainRoutesByStartAndEndStationsAndDayAndTime(
                     startStation, endStation, day, time
                 )
+
             case "3":
-                ticketsByLoggedinCustomer()
+                print("Currently in beta: Buying tickets")
+                buyAvailableTicketsOnGivenTrainRoute()
 
             case _:
                 con.close()
