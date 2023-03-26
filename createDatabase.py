@@ -151,8 +151,12 @@ def createDatabase():
         """CREATE TABLE PassengerPlace(
     PassengerPlaceID INTEGER NOT NULL,
     WagonID INTEGER NOT NULL,
-    CONSTRAINT PassengerPlace_PK PRIMARY KEY (PassengerPlaceID, WagonID),
+    InstanceID INTEGER NOT NULL,
+    CONSTRAINT PassengerPlace_PK PRIMARY KEY (PassengerPlaceID, InstanceID),
     CONSTRAINT PassengerPlace_FK FOREIGN KEY (WagonID) REFERENCES Wagon(WagonID)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE,
+    CONSTRAINT PassengerPlace_FK2 FOREIGN KEY (InstanceID) REFERENCES TrainRouteInstance(InstanceID)
     ON UPDATE CASCADE
     ON DELETE CASCADE
     )"""
@@ -193,11 +197,10 @@ def createDatabase():
 
     cursor.execute(
         """CREATE TABLE Ticket(
-    TicketID INTEGER NOT NULL,
+    TicketID INTEGER PRIMARY KEY AUTOINCREMENT,
     OrderNumber INTEGER NOT NULL,
     InstanceID INTEGER NOT NULL,
     PassengerPlaceID INTEGER NOT NULL,
-    CONSTRAINT Ticket_PK PRIMARY KEY (TicketID),
     CONSTRAINT Ticket_FK1 FOREIGN KEY (OrderNumber) REFERENCES CustomerOrder(OrderNumber)
     ON UPDATE CASCADE
     ON DELETE CASCADE,

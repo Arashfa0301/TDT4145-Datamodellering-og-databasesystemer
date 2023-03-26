@@ -103,5 +103,30 @@ def fillDatabase():
 
     cursor.execute('INSERT INTO Customer VALUES(0, "Viljan", "viljan@gmail.com", "Lyngveien 15", 96622317)')
 
+    cursor.execute('INSERT INTO PassengerPlace VALUES(1,0,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(2,0,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(3,0,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(4,0,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(5,0,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(6,0,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(7,0,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(8,0,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(9,0,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(10,0,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(11,0,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(12,0,0)')
+    
+    cursor.execute('INSERT INTO PassengerPlace VALUES(13,1,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(14,1,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(15,1,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(16,1,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(17,1,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(18,1,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(19,1,0)')
+    cursor.execute('INSERT INTO PassengerPlace VALUES(20,1,0)')
+    
+    cursor.execute('INSERT INTO Ticket VALUES(0,0,0,7)')    
+    cursor.execute('INSERT INTO Ticket VALUES(1,0,0,8)')    
+
     con.commit()
     con.close()

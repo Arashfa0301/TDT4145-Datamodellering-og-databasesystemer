@@ -71,7 +71,7 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
         INNER JOIN TrainRoute USING (TrainRouteID) 
         INNER JOIN IntermediateStationOnTrackStretch USING (TrackID, StationsID)  
         WHERE StationsID = ? OR StationsID = ?)
-    SELECT TrainRouteID, Time FROM TrainRouteInstance INNER JOIN
+    SELECT TrainRouteID, Time, InstanceID FROM TrainRouteInstance INNER JOIN
         (SELECT a.TrainRouteID, a.MainDirection, minStation, minStationOrder, maxStation,maxStationOrder
         FROM (SELECT TrainRouteID, StationsID as minStation, min(StationOrder) as minStationOrder, MainDirection FROM test GROUP BY TrainRouteID) as a
         INNER JOIN (SELECT TrainRouteID, StationsID as maxStation, max(StationOrder) as maxStationOrder FROM test GROUP BY TrainRouteID) AS b USING (TrainRouteID))
@@ -80,7 +80,7 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
         AND (Time = date(?) or Time = date(?, "+1 day"))
 	""", [startStationID, endStationID, startStationID, endStationID, startStationID, endStationID, day, day]
     )
-
+    print(result)
     stationTimeTable = PrettyTable()
 
     stationTimeTable.field_names = ["TrainRoute","Date"]
@@ -89,12 +89,30 @@ def trainRoutesByStartAndEndStationsAndDayAndTime(startStation, endStation, day,
 
     print(stationTimeTable)
     print("\n")
+    return result
 
 def buyAvailableTicketsOnGivenTrainRoute():
     # Run the search function first and pass into here:
     # 0 Should be the id
-    trainRouteInstance = 0
-    buyTickets(trainRouteInstance)
+    startStation = input("Start station: ")
+    endStation = input("End station: ")
+    day = input("Which day do you wish to travel: ")
+    time = input("At what time do you wish to travel: ")
+    result = trainRoutesByStartAndEndStationsAndDayAndTime(
+        startStation, endStation, day, time
+    )
+    print(""""
+To choose: Write the index (first =  1) of 
+the travel you want to buy tickets to.""")
+    while True:
+        chosenTravel = int(input("On which route do you want to travel?: "))-1
+        try:
+            result[chosenTravel]
+            break
+        except Exception as error:
+            print("Not a legal route.")
+            continue
+    buyTickets(result[chosenTravel][2],result[chosenTravel][0],loggedInUser)
 
 
 def register():
@@ -138,7 +156,7 @@ def register():
 def login():
     email = input("Epost: ")
     user = executeCursorSelect(
-        "SELECT Name, Email, Address, TelephoneNumber FROM Customer WHERE Email = ?",
+        "SELECT CustomerNumber, Name, Email, Address, TelephoneNumber  FROM Customer WHERE Email = ?",
         [email],
     )
 
@@ -147,18 +165,18 @@ def login():
         print("Please try again. ")
         email = input("Epost: ")
         user = executeCursorSelect(
-        "SELECT Name, Email, Address, TelephoneNumber FROM Customer WHERE Email = ?",
+        "SELECT * FROM Customer WHERE Email = ?",
         [email],
     )
 
     print("Wonderful!!! You are now logged in ")
-
     global loggedInUser
     loggedInUser = {
-        "name": user[0][0],
-        "email": user[0][1],
-        "address": user[0][2],
-        "telephoneNumber": user[0][3],
+        "CustomerNumber": user[0][0],
+        "name": user[0][1],
+        "email": user[0][2],
+        "address": user[0][3],
+        "telephoneNumber": user[0][4],
     }
 
 
