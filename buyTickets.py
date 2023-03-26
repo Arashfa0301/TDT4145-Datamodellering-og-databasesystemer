@@ -11,7 +11,7 @@ def executeCursorSelect(sql, parameters):
     cursor.execute(sql, parameters)
     return cursor.fetchall()
 
-def buyTickets(InstanceID, TrainRouteID, loggedInUser):
+def buyTickets(InstanceID, TrainRouteID, loggedInUser, startStation, endStation):
     #Get wagons on trainroute
     try:
         getWagonType = ["""
@@ -22,13 +22,26 @@ def buyTickets(InstanceID, TrainRouteID, loggedInUser):
             WHERE tr.TrainRouteID = ? ORDER BY wl.Sequence  
         """, [TrainRouteID]]
         wagonArray = executeCursorSelect(getWagonType[0],getWagonType[1])
+        
+        # FindPartialTrackStretch
+        partialTrackStretchIDs = findPartialTrackStretch(startStation,endStation,TrainRouteID)
+    
         nonAvailableSeatsPerWagon = []
-        navSQuery = ["SELECT t.PassengerPlaceID FROM Ticket t INNER JOIN PassengerPlace p ON t.PassengerPlaceID = p.PassengerPlaceID WHERE p.InstanceID = ?",[InstanceID]]
+        # TODO: This needs to be changed
+
+        ## Her henter du alle, hvis den er inne i her
         tempNon = []
-        tempNon = executeCursorSelect(navSQuery[0],navSQuery[1])
-        for seat in tempNon:
-            nonAvailableSeatsPerWagon.append(seat[0])
-        #vogner = executeCursorSelect("SELECT w.Name, w.WagonID FROM Wagon w INNER JOIN WagonLayout wl ON wl.TrainRouteID = ? ORDER BY wl.Sequence", [TrainRouteID])
+        for partialTrackStretchID in partialTrackStretchIDs:
+            navSQuery = ["""SELECT t.PassengerPlaceID FROM Ticket t 
+                        INNER JOIN TicketOnPartialTrackStretch tp ON t.TicketID = tp.TicketID
+                        WHERE tp.PartialTrackStretchID = ?
+                        """,[partialTrackStretchID]]
+            tempNon.append(executeCursorSelect(navSQuery[0],navSQuery[1]))   
+
+        for seatInstances in tempNon:
+            for seat in seatInstances:
+                nonAvailableSeatsPerWagon.append(seat[0])
+
         vogner = []
         for wagon in wagonArray:
             vogner.append(executeCursorSelect("SELECT w.Name FROM Wagon w WHERE w.WagonID = ?", [wagon[0]])[0])
@@ -40,6 +53,7 @@ def buyTickets(InstanceID, TrainRouteID, loggedInUser):
         chosenWagonI = input("Pick a carriage:")
         chosenWagon = wagonArray[int(chosenWagonI)-1]
         print("Here are the available seats (X = Unavailable):")
+
         firstSeat = executeCursorSelect("SELECT p.PassengerPlaceID FROM PassengerPlace p WHERE p.InstanceID = ? AND p.WagonID = ? ORDER BY p.PassengerPlaceID LIMIT 1",[InstanceID, chosenWagon[0]])
         isSleeping = executeCursorSelect("SELECT * FROM SleepingWagon WHERE WagonID = ?",[chosenWagon[0]])
         if not (len(isSleeping)==0):
@@ -69,12 +83,14 @@ def buyTickets(InstanceID, TrainRouteID, loggedInUser):
         if not cancelBook == "Y":
             return 0
         cursor.execute("INSERT INTO CustomerOrder VALUES(?,?,?)",[booking[0],time.strftime("%Y-%m-%d %H:%M:%S"),loggedInUser["CustomerNumber"]])
+        
+        # TODO: Insert into ticket on partial track stretch
         for ticket in tickets:
             cursor.execute("INSERT INTO Ticket (OrderNumber, InstanceID, PassengerPlaceID) VALUES(?,?,?)",[booking[0],InstanceID,ticket])
-        ## Men får med null verdier, kan bruke case for å hindre det.
-
-        query = """INSERT INTO Ticket (OrderNumber, InstanceID) VALUES (2,0)"""
-        #actual_shit = executeCursorSelect("SELECT * FROM Ticket",[])
+            cursor.execute("SELECT TicketID FROM Ticket WHERE OrderNumber = ? AND InstanceID = ? AND PassengerPlaceID = ?",[booking[0],InstanceID,ticket])
+            ticketID = cursor.fetchall()
+            for partialTrackStretchID in partialTrackStretchIDs:
+                cursor.execute("INSERT INTO TicketOnPartialTrackStretch VALUES (?,?)",[ticketID[0][0],partialTrackStretchID])
     except Exception as error:
         print("""
         Something went wrong, you might have inputted something illegal.
@@ -85,7 +101,48 @@ def buyTickets(InstanceID, TrainRouteID, loggedInUser):
     print("Booking confirmed.")
 
 
+def findPartialTrackStretch(startStation, endStation,TrainRouteID):
+    # Sjekk hovedretning, hvis den er med trackstretch finn start = start, deretter end = start
+    # Hvis mot hovedretning, bruk start = end, deretter end = end
+    # iterer til du finner end = start, så legger du til alle imellom i en liste og returnerer det.
+    # Select hvor du finner en partial track stretch med startstasjon, for loop som finner endStation
 
+    partTrackStretches = executeCursorSelect("SELECT * FROM PartialTrackStretch",[])
+    
+    startStationID = executeCursorSelect("SELECT StationsID FROM Trainstation WHERE Name = ?",[startStation])[0][0]
+
+    endStationID = executeCursorSelect("SELECT StationsID FROM Trainstation WHERE Name = ?",[endStation])[0][0]
+
+    direction = executeCursorSelect("SELECT MainDirection FROM TrainRoute WHERE TrainRouteID = ?", [TrainRouteID])[0][0]
+
+    # When it does go with maindirection
+    partOfTrackIDs = []
+    if direction == 1:
+        partTrackStretches.sort(key=lambda x:x[5])
+        for partTrack in partTrackStretches:
+            if startStationID == partTrack[4]:
+                partOfTrackIDs.append(partTrack[0])
+            if not len(partOfTrackIDs) == 0:
+                if endStationID == partTrack[4]:
+                    break
+                else:
+                    partOfTrackIDs.append(partTrack[0])
+
+    #When it doesn't
+    elif direction == 0:
+        partTrackStretches.sort(reverse=True, key=lambda x:x[5])
+        for partTrack in partTrackStretches:
+            if startStationID == partTrack[5]:
+                partOfTrackIDs.append(partTrack[0])
+            elif not len(partOfTrackIDs) == 0:
+                if endStationID == partTrack[5]:
+                    break
+                else:
+                    partOfTrackIDs.append(partTrack[0])
+
+    return partOfTrackIDs
+        
+        
 
 # Print a wagon with available seats (by ID)
 def printWagon(type, numRowsOrCol, rowWidth, nonAvailableSeats, startIDWagon):

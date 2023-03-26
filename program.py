@@ -3,6 +3,7 @@ import sqlite3
 from prettytable import PrettyTable
 from datetime import date
 from buyTickets import buyTickets
+from buyTickets import findPartialTrackStretch
 
 con = sqlite3.connect("trainstationDB.db")
 cursor = con.cursor()
@@ -186,7 +187,7 @@ the travel you want to buy tickets to.""")
         except Exception as error:
             print("Not a legal route.")
             continue
-    buyTickets(result[chosenTravel][6],result[chosenTravel][0],loggedInUser)
+    buyTickets(result[chosenTravel][6],result[chosenTravel][0],loggedInUser,startStation,endStation)
 
 def ticketsByLoggedinCustomer():
     result = executeCursorSelect(
