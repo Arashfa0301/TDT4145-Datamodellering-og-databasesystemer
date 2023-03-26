@@ -132,47 +132,36 @@ def fillDatabase():
     cursor.execute("INSERT INTO TrainRouteInstance VALUES (4, 2, date('2023-04-03'))")
     cursor.execute("INSERT INTO TrainRouteInstance VALUES (5, 2, date('2023-04-04'))")
 
-    # To be romoved:
+    ## Script for adding the PassengerPlaces for all trainrouteinstances
+    cursor.execute('SELECT InstanceID, TrainRouteID FROM TrainRouteInstance')
+    trainrouteInstances = cursor.fetchall()
+    wagonForInstance = []
+    for instance in trainrouteInstances:
+        getWagonType = ["""
+        SELECT wl.WagonID, st.NumberOfRows, st.RowWidth, sl.NumberOfCompartments FROM TrainRoute tr 
+        INNER JOIN WagonLayout wl ON tr.TrainRouteID = wl.TrainRouteID 
+            LEFT JOIN SittingWagon st ON wl.WagonID = st.WagonID
+            left join SleepingWagon sl on wl.WagonID = sl.WagonID
+            WHERE tr.TrainRouteID = ? ORDER BY wl.Sequence  
+        """, [instance[1]]]    
+        cursor.execute(getWagonType[0],getWagonType[1])
+        wagonTypes = cursor.fetchall()
 
-    cursor.execute(
-        'INSERT INTO Customer VALUES(0, "Viljan", "viljan@gmail.com", "Lyngveien 15", 96622317)'
-    )
-    cursor.execute('INSERT INTO Customer VALUES(1, "arash", "arash", "arash", 1)')
+        wagonForInstance.append([instance[0],wagonTypes])
 
-    cursor.execute('INSERT INTO CustomerOrder VALUES(0, date("2022-01-01"), 1)')
-
-    cursor.execute("INSERT INTO PassengerPlace VALUES(0, 0)")
-
-    cursor.execute("INSERT INTO Ticket VALUES(0, 0, 0, 0)")
-    cursor.execute("INSERT INTO Ticket VALUES(1, 0, 1, 0)")
-    cursor.execute("INSERT INTO Ticket VALUES(2, 0, 2, 0)")
-    cursor.execute("INSERT INTO Ticket VALUES(3, 0, 2, 0)")
-    cursor.execute("INSERT INTO Ticket VALUES(4, 0, 2, 0)")
-
-    cursor.execute('INSERT INTO PassengerPlace VALUES(1,0,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(2,0,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(3,0,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(4,0,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(5,0,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(6,0,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(7,0,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(8,0,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(9,0,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(10,0,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(11,0,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(12,0,0)')
-    
-    cursor.execute('INSERT INTO PassengerPlace VALUES(13,1,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(14,1,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(15,1,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(16,1,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(17,1,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(18,1,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(19,1,0)')
-    cursor.execute('INSERT INTO PassengerPlace VALUES(20,1,0)')
-    
-    cursor.execute('INSERT INTO Ticket VALUES(0,0,0,7)')    
-    cursor.execute('INSERT INTO Ticket VALUES(1,0,0,8)')    
+    for wagInst in wagonForInstance:
+        i = 1
+        for wagon in wagInst[1]:
+            if wagon[3] == None:
+                numOfPlaces = wagon[1]*wagon[2]
+                for j in range(numOfPlaces):
+                    cursor.execute('INSERT INTO PassengerPlace VALUES(?,?,?)',[i,wagon[0],wagInst[0]])
+                    i+=1
+            else:
+                numOfPlaces = wagon[3]*2
+                for j in range(numOfPlaces):
+                    cursor.execute('INSERT INTO PassengerPlace VALUES(?,?,?)',[i,wagon[0],wagInst[0]])
+                    i+=1
 
     con.commit()
     con.close()
