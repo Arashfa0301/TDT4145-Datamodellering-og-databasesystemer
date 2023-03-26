@@ -185,6 +185,8 @@ the travel you want to buy tickets to."""
     )
     while True:
         chosenTravel = int(input("On which route do you want to travel?: ")) - 1
+        startStation = input("Input the start station")
+        endStation = input("Input the end station")
         try:
             result[chosenTravel]
             break
