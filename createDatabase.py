@@ -172,7 +172,7 @@ def createDatabase():
     OrderNumber INTEGER NOT NULL,
     Time INTEGER,
     CustomerNumber INTEGER NOT NULL,
-    CONSTRAINT CustomerOrder_PK PRIMARY KEY (OrderNumber, CustomerNumber),
+    CONSTRAINT CustomerOrder_PK PRIMARY KEY (OrderNumber),
     CONSTRAINT CustomerOrder_FK FOREIGN KEY (CustomerNumber) REFERENCES Customer(CustomerNumber)
     ON UPDATE CASCADE
     ON DELETE CASCADE
