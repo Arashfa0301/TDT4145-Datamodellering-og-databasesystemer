@@ -192,13 +192,18 @@ the travel you want to buy tickets to."""
             print("Not a legal route.")
             continue
 
-    buyTickets(result[chosenTravel][6],result[chosenTravel][0],loggedInUser,startStation,endStation)
+    buyTickets(
+        result[chosenTravel][6],
+        result[chosenTravel][0],
+        loggedInUser,
+        startStation,
+        endStation,
+    )
 
 
 def ticketsByLoggedinCustomer():
     result = executeCursorSelect(
-
-        """SELECT co.OrderNumber, co.Time, tri.TrainRouteID, t.PassengerPlaceID, tri.Time, c.Name 
+        """SELECT co.OrderNumber, co.Time, tri.TrainRouteID, t.PassengerPlaceID, tri.Time, c.Name
 
         NATURAL JOIN Ticket t
         NATURAL JOIN Customer c
@@ -220,27 +225,34 @@ def ticketsByLoggedinCustomer():
         "Ticket date",
         "Customer",
         "From Station",
-        "To Station"
+        "To Station",
     ]
     for i in result:
-        trackStretches = executeCursorSelect("""
-        SELECT StartStation, EndStation, StationOrder, MainDirection  FROM IntermediateStationOnTrackStretch 
-        INNER JOIN IntermediateStationOnTrainRoute USING (StationsID) 
-        INNER JOIN PartialTrackStretch on StationsID = StartStation 
-        INNER JOIN TicketOnPartialTrackStretch USING (PartialTrackStretchID) 
+        trackStretches = executeCursorSelect(
+            """
+        SELECT StartStation, EndStation, StationOrder, MainDirection  FROM IntermediateStationOnTrackStretch
+        INNER JOIN IntermediateStationOnTrainRoute USING (StationsID)
+        INNER JOIN PartialTrackStretch on StationsID = StartStation
+        INNER JOIN TicketOnPartialTrackStretch USING (PartialTrackStretchID)
         INNER JOIN TrainRoute USING (TrainRouteID)
         WHERE TrainRouteID = ?
-        ORDER BY StationOrder ASC       
-        """, [i[2]])
-        if trackStretches[0][3] == 1: #Check which direction the trainroute goes
-            fromStation = trackStretches[0][0] #Set from station
-            toStation = trackStretches[-1][1] #Set to station
+        ORDER BY StationOrder ASC
+        """,
+            [i[2]],
+        )
+        if trackStretches[0][3] == 1:  # Check which direction the trainroute goes
+            fromStation = trackStretches[0][0]  # Set from station
+            toStation = trackStretches[-1][1]  # Set to station
         else:
-            fromStation = trackStretches[-1][1] #Set from station
-            toStation = trackStretches[0][0] #Set to station
+            fromStation = trackStretches[-1][1]  # Set from station
+            toStation = trackStretches[0][0]  # Set to station
 
-        fromStation = executeCursorSelect("SELECT Name FROM Trainstation WHERE StationsID = ?", [fromStation])[0][0]
-        toStation = executeCursorSelect("SELECT Name FROM Trainstation WHERE StationsID = ?", [toStation])[0][0]
+        fromStation = executeCursorSelect(
+            "SELECT Name FROM Trainstation WHERE StationsID = ?", [fromStation]
+        )[0][0]
+        toStation = executeCursorSelect(
+            "SELECT Name FROM Trainstation WHERE StationsID = ?", [toStation]
+        )[0][0]
 
         pt.add_row([i[0], i[1], i[2], i[3], i[4], i[5], fromStation, toStation])
 
@@ -297,17 +309,17 @@ def login():
         user = executeCursorSelect(
             "SELECT * FROM Customer WHERE Email = ?",
             [email],
-        )[0]
+        )
 
     print("\nWonderful!!! You are now logged in\n")
 
     global loggedInUser
     loggedInUser = {
-        "CustomerNumber": user[0],
-        "name": user[1],
-        "email": user[2],
-        "address": user[3],
-        "telephoneNumber": user[4],
+        "CustomerNumber": user[0][0],
+        "name": user[0][1],
+        "email": user[0][2],
+        "address": user[0][3],
+        "telephoneNumber": user[0][4],
     }
 
 
@@ -349,15 +361,9 @@ def main():
             " - Type 2 to list all the available train routes that pass through given start and end stations at a given day and time\n "
         )
 
-        print(
-            " - Type 3 to buy tickets on a given route\n"
-        )
-        print(
-            " - Type 4 to see all your bought tickets\n"
-        )
-        print(
-            " - Type 9 to see user information"
-        )
+        print(" - Type 3 to buy tickets on a given route\n")
+        print(" - Type 4 to see all your bought tickets\n")
+        print(" - Type 9 to see user information")
 
         response = input("Type in your answer: ")
 
@@ -373,7 +379,6 @@ def main():
             case "3":
                 buyAvailableTicketsOnGivenTrainRoute()
 
-
             case "4":
                 ticketsByLoggedinCustomer()
 
@@ -386,6 +391,3 @@ def main():
 
 
 main()
-
-
-trainRoutesByDayAndTrainStation()
