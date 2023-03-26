@@ -34,8 +34,8 @@ def buyTickets(InstanceID, TrainRouteID, loggedInUser, startStation, endStation)
         for partialTrackStretchID in partialTrackStretchIDs:
             navSQuery = ["""SELECT t.PassengerPlaceID FROM Ticket t 
                         INNER JOIN TicketOnPartialTrackStretch tp ON t.TicketID = tp.TicketID
-                        WHERE tp.PartialTrackStretchID = ?
-                        """,[partialTrackStretchID]]
+                        WHERE tp.PartialTrackStretchID = ? AND t.InstanceID = ?
+                        """,[partialTrackStretchID, InstanceID]]
             tempNon.append(executeCursorSelect(navSQuery[0],navSQuery[1]))   
 
         for seatInstances in tempNon:
@@ -57,9 +57,9 @@ def buyTickets(InstanceID, TrainRouteID, loggedInUser, startStation, endStation)
         firstSeat = executeCursorSelect("SELECT p.PassengerPlaceID FROM PassengerPlace p WHERE p.InstanceID = ? AND p.WagonID = ? ORDER BY p.PassengerPlaceID LIMIT 1",[InstanceID, chosenWagon[0]])
         isSleeping = executeCursorSelect("SELECT * FROM SleepingWagon WHERE WagonID = ?",[chosenWagon[0]])
         if not (len(isSleeping)==0):
-            printWagon(int(chosenWagon[0]), int(chosenWagon[3]),0,nonAvailableSeatsPerWagon,firstSeat[0][0])
+            printWagon(1, int(chosenWagon[3]),0,nonAvailableSeatsPerWagon,firstSeat[0][0])
         else:
-            printWagon(int(chosenWagon[0]),int(chosenWagon[1]),int(chosenWagon[2]),nonAvailableSeatsPerWagon,firstSeat[0][0])
+            printWagon(0,int(chosenWagon[1]),int(chosenWagon[2]),nonAvailableSeatsPerWagon,firstSeat[0][0])
         tickets = []
         while True:
             chosenPlace = input("Choose a seat:")

@@ -208,7 +208,7 @@ the travel you want to buy tickets to."""
 def ticketsByLoggedinCustomer():
     result = executeCursorSelect(
         """
-        SELECT co.OrderNumber, co.Time, tri.TrainRouteID, t.PassengerPlaceID, tri.Time, c.Name 
+                SELECT co.OrderNumber, co.Time, tri.TrainRouteID, t.PassengerPlaceID, tri.Time, c.Name, w.Name
         FROM CustomerOrder co
         NATURAL JOIN Ticket t
         NATURAL JOIN Customer c
@@ -216,6 +216,7 @@ def ticketsByLoggedinCustomer():
         INNER JOIN TrainRouteInstance tri
             USING (InstanceID)
         NATURAL JOIN TrainRoute tr
+		INNER JOIN Wagon w USING (WagonID)
             WHERE c.Email == ?
         """,
         [loggedInUser["email"]],
@@ -227,6 +228,7 @@ def ticketsByLoggedinCustomer():
         "Purchase date",
         "Train route",
         "Seat/Bed number",
+        "Type",
         "Ticket date",
         "Customer",
         "From Station",
@@ -259,7 +261,7 @@ def ticketsByLoggedinCustomer():
             "SELECT Name FROM Trainstation WHERE StationsID = ?", [toStation]
         )[0][0]
 
-        pt.add_row([i[0], i[1], i[2], i[3], i[4], i[5], fromStation, toStation])
+        pt.add_row([i[0], i[1], i[2], i[3], "Seat" if "sittevogn" in i[6] else "Bed", i[4], i[5], fromStation, toStation])
 
     print(pt, "\n")
 
